@@ -1,418 +1,213 @@
-<!-- Save as: chofer/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>REMIS 3A - Chofer & Admin</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    :root {
-      --bg: #f8f9fa;
-      --card: #ffffff;
-      --accent: #00c853;
-      --accent-yellow: #ffc107;
-      --text: #212529;
-      --subtext: #6c757d;
-      --border: #e9ecef;
-      --shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    html, body { overflow-y: auto !important; height: auto !important; background: var(--bg); color: var(--text); }
-    
-    header { height: 60px; background: linear-gradient(135deg, #00c853 0%, #ffc107 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    header h1 { font-size: 1.1rem; font-weight: 900; color: #000; }
-    .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 900; }
-    .status-online { background: #00c853; color: #000; }
-    .status-offline { background: #6c757d; color: #fff; }
-
-    #map-container { width: 100%; height: 35vh; position: relative; min-height: 220px; }
-    #map { width: 100%; height: 100%; }
-
-    .sheet { background: var(--card); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px 16px 100px 16px; margin-top: -20px; position: relative; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); border-top: 1px solid var(--border); }
-    .form-group { margin-bottom: 12px; }
-    label { font-size: 0.75rem; color: var(--subtext); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
-    input, select { width: 100%; height: 48px; background: #fdfdfd; border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); padding: 0 14px; font-size: 0.95rem; outline: none; font-weight: 500; }
-    
-    .btn-main { width: 100%; height: 60px; background: var(--accent); color: #000; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 8px; box-shadow: 0 6px 20px rgba(0,200,83,0.3); }
-    .btn-main:active { transform: scale(0.98); }
-    .btn-danger { background: #d32f2f; width: 100%; height: 50px; border: none; border-radius: 10px; color: #fff; font-weight: 800; cursor: pointer; margin-top: 8px; }
-
-    .dash-box { background: #f8f9fa; border: 1.5px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; font-size: 0.9rem; box-shadow: var(--shadow); }
-    .dash-box h4 { font-size: 0.95rem; color: #2e7d32; margin-bottom: 8px; font-weight: 900; }
-
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-    .btn-action { height: 48px; background: #f8f9fa; border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
-
-    .taximetro { background: #fff; border: 2.5px solid var(--accent); border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 14px; box-shadow: var(--shadow); }
-    .taximetro .price { font-size: 3rem; font-weight: 900; color: #00c853; line-height: 1; margin: 10px 0; }
-
-    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
-    .modal-content { background: var(--card); width: 100%; max-width: 450px; border-radius: 20px; padding: 20px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-
-    .order-card { background: #fff; border: 2px solid var(--accent); padding: 16px; border-radius: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMIS 3A - Chofer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        :root {
+            --bg-color: #F5F7FA; --card-bg: #FFFFFF; --text-color: #0F2A3D;
+            --primary: #0F2A3D; --accent: #C9A227; --success: #1DB954; --danger: #E63946;
+            --border-color: #E2E8F0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        [data-theme="dark"] {
+            --bg-color: #121824; --card-bg: #1E293B; --text-color: #F8FAFC;
+            --primary: #38BDF8; --accent: #FACC15; --success: #22C55E; --danger: #EF4444;
+            --border-color: #334155; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        html, body { overflow-y: auto; height: auto; background-color: var(--bg-color); color: var(--text-color); }
+        header { background: linear-gradient(135deg, var(--primary), #1E3A8A); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area h1 { font-size: 1.25rem; font-weight: 800; }
+        .header-actions { display: flex; gap: 8px; }
+        .btn-icon { background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-color); }
+        #map-container { width: 100%; height: 35vh; min-height: 220px; position: relative; z-index: 1; }
+        #map { width: 100%; height: 100%; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto 80px auto; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-color); }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 1rem; outline: none; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: var(--primary); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-color); }
+        .alert { padding: 12px 15px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; display: none; }
+        .alert-error { background: rgba(230, 57, 70, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .alert-success { background: rgba(29, 185, 84, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 12px 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 999; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--border-color); }
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .text-sm { font-size: 0.85rem; opacity: 0.8; }
+        .mt-2 { margin-top: 10px; }
+        .mb-2 { margin-bottom: 10px; }
+    </style>
 </head>
 <body>
+    <header>
+        <div class="logo-area">
+            <span style="font-size: 1.5rem;">🚖</span>
+            <h1>REMIS 3A - Chofer</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="llamarBase()">📞 Base</button>
+            <button class="btn-icon" onclick="openModal('modal-perfil-chofer')">⚙️ Perfil</button>
+        </div>
+    </header>
 
-  <header>
-    <h1>REMIS 3A - CHOFER</h1>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span id="status-tag" class="status-badge status-offline">OFFLINE</span>
-      <button style="background:#212529; border:none; color:#fff; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:900;" onclick="openAdminModal()">🔑 ADMIN</button>
+    <div id="map-container">
+        <div id="map"></div>
     </div>
-  </header>
 
-  <div id="map-container">
-    <div id="map"></div>
-  </div>
+    <div class="container">
+        <div id="alert-error" class="alert alert-error"></div>
+        <div id="alert-success" class="alert alert-success"></div>
 
-  <div class="sheet" id="driver-sheet">
-    <!-- UI CHOFER -->
-  </div>
-
-  <div id="driver-modal" class="modal" style="display: none;"></div>
-
-  <script>
-    const TRES_ARROYOS = [-38.375, -60.273];
-    const BAJADA = 1500;
-    const POR_KM = 300;
-    const MINIMO = 2000;
-    const EXTRA_PARADA = 500;
-    const APP_FEE = 0.05;
-
-    let map, driverMarker;
-    let isAvailable = false;
-    let driverProfile = null;
-    let activeTrip = null;
-    let pendingOrderIncoming = null;
-
-    let taximeterInterval = null;
-    let liveKm = 0.0;
-
-    window.onload = () => {
-      initMap();
-      loadProfile();
-      checkActiveTrip();
-      renderSheet();
-      window.addEventListener('storage', syncDriverState);
-      setInterval(listenPendingOrders, 2000);
-    };
-
-    function initMap() {
-      map = L.map('map', { zoomControl: false }).setView(TRES_ARROYOS, 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-      const carIcon = L.divIcon({ html: '🚗', className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
-      driverMarker = L.marker(TRES_ARROYOS, { icon: carIcon }).addTo(map);
-
-      if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(pos => {
-          let p = [pos.coords.latitude, pos.coords.longitude];
-          driverMarker.setLatLng(p);
-          if (isAvailable && activeTrip) {
-            activeTrip.driverPos = p;
-            localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
-          }
-        }, err => console.log(err), { enableHighAccuracy: true });
-      }
-    }
-
-    function loadProfile() {
-      driverProfile = JSON.parse(localStorage.getItem('remis3a_driver_profile') || 'null');
-    }
-
-    function syncDriverState() {
-      checkActiveTrip();
-      renderSheet();
-    }
-
-    function checkActiveTrip() {
-      activeTrip = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
-    }
-
-    function listenPendingOrders() {
-      if (!isAvailable || activeTrip) return;
-      let pending = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
-      if (pending.length > 0 && !pendingOrderIncoming) {
-        pendingOrderIncoming = pending[0];
-        renderSheet();
-      }
-    }
-
-    function renderSheet() {
-      const container = document.getElementById('driver-sheet');
-      if (!driverProfile) { renderLoginUI(container); return; }
-      if (!isAvailable) { renderOfflineUI(container); return; }
-      if (pendingOrderIncoming && !activeTrip) { renderIncomingOrderUI(container, pendingOrderIncoming); return; }
-
-      if (!activeTrip) {
-        renderDashboardUI(container);
-      } else if (activeTrip.status === 'ASIGNADO') {
-        renderAcceptedTripUI(container, activeTrip);
-      } else if (activeTrip.status === 'EN_VIAJE') {
-        renderTaximeterUI(container, activeTrip);
-      } else if (activeTrip.status === 'FINALIZADO') {
-        renderFinishTripUI(container, activeTrip);
-      }
-    }
-
-    function renderLoginUI(container) {
-      container.innerHTML = `
-        <h3 style="margin-bottom:12px; font-weight:900;">📝 Registro Chofer</h3>
-        <div class="form-group"><label>Nombre Completo</label><input type="text" id="reg-name" value="Juan Pérez"></div>
-        <div class="form-group"><label>DNI</label><input type="number" id="reg-dni" value="35123456"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>Patente</label><input type="text" id="reg-plate" value="AB 123 CD"></div>
-          <div class="form-group"><label>Modelo / Año</label><input type="text" id="reg-model" value="Fiat Cronos 2023"></div>
-        </div>
-        <button class="btn-main" onclick="saveDriverProfile()">GUARDAR Y CONTINUAR</button>
-      `;
-    }
-
-    function saveDriverProfile() {
-      driverProfile = {
-        name: document.getElementById('reg-name').value,
-        plate: document.getElementById('reg-plate').value,
-        model: document.getElementById('reg-model').value
-      };
-      localStorage.setItem('remis3a_driver_profile', JSON.stringify(driverProfile));
-      renderSheet();
-    }
-
-    function renderOfflineUI(container) {
-      container.innerHTML = `
-        <div class="form-group">
-          <label>Ubicación de Salida</label>
-          <select id="driver-location-type">
-            <option value="EN BASE">EN BASE</option>
-            <option value="EN LA CALLE">EN LA CALLE</option>
-          </select>
-        </div>
-        <button class="btn-main" style="height:70px; font-size:1.2rem;" onclick="setAvailable(true)">PONERME DISPONIBLE</button>
-      `;
-    }
-
-    function setAvailable(val) {
-      isAvailable = val;
-      const tag = document.getElementById('status-tag');
-      if (val) { tag.className = 'status-badge status-online'; tag.innerText = 'ONLINE'; }
-      else { tag.className = 'status-badge status-offline'; tag.innerText = 'OFFLINE'; }
-      renderSheet();
-    }
-
-    function renderDashboardUI(container) {
-      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":8, "total":25000}');
-      let appFee = stats.total * APP_FEE;
-      let net = stats.total - appFee;
-      let reservas = JSON.parse(localStorage.getItem('remis3a_reservas') || '[]');
-
-      container.innerHTML = `
-        <div class="dash-box">
-          <h4>📊 Resumen de Hoy</h4>
-          <p><strong>Viajes:</strong> ${stats.trips} | <strong>Cobrado:</strong> $${stats.total}</p>
-          <p><strong>Comisión App (5%):</strong> -$${appFee}</p>
-          <hr style="border-color:var(--border); margin:8px 0;">
-          <p style="font-size:1.1rem; color:#2e7d32; font-weight:900;">Te quedan: $${net}</p>
+        <div class="card" style="text-align: center;">
+            <div class="card-title">🟢 Estado de Disponibilidad</div>
+            <div id="estado-chofer-txt" style="font-size: 1.2rem; font-weight: 800; color: var(--danger); margin-bottom: 15px;">OFICINA / DESCONECTADO</div>
+            <button id="btn-toggle-disp" class="btn btn-success" onclick="toggleDisponibilidad()">PONERME EN SERVICIO (ONLINE)</button>
         </div>
 
-        <div class="dash-box" style="border-color:#bbdefb; background:#e3f2fd;">
-          <h4 style="color:#1565c0;">📅 Reservas de Mañana</h4>
-          ${reservas.length === 0 ? '<p style="color:var(--subtext); font-size:0.85rem;">No hay reservas programadas.</p>' :
-            reservas.map((r, idx) => `
-              <div style="background:#fff; padding:10px; border-radius:8px; margin-top:6px; font-size:0.85rem; border:1px solid #bbdefb;">
-                <strong>${r.when}</strong><br>
-                Destino: <strong>${r.destName}</strong><br>
-                <button onclick="acceptReserva(${idx})" style="margin-top:6px; background:#1565c0; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; width:100%;">ACEPTAR RESERVA</button>
-              </div>
-            `).join('')}
+        <div class="card">
+            <div class="card-title">📊 Resumen de Hoy</div>
+            <div class="flex-between mb-2"><span>Viajes realizados:</span> <strong id="chofer-viajes-hoy">8</strong></div>
+            <div class="flex-between mb-2"><span>Facturación total:</span> <strong id="chofer-fact-hoy" style="color: var(--success);">$21.600</strong></div>
+            <div class="flex-between mb-2"><span>Comisión App (5%):</span> <strong style="color: var(--danger);">-$1.080</strong></div>
+            <div class="flex-between"><span>Te queda (95%):</span> <strong id="chofer-neto-hoy" style="color: var(--accent);">$20.520</strong></div>
         </div>
 
-        <div style="text-align:center; padding:16px; border:2px dashed var(--border); border-radius:12px; margin-bottom:12px;">
-          <p style="color:var(--subtext); font-weight:600;">📡 Buscando viajes en Tres Arroyos...</p>
+        <div class="card">
+            <div class="card-title">➕ Cargar Gasto Diario</div>
+            <div class="form-group">
+                <label class="form-label">Tipo de Gasto</label>
+                <select id="gasto-tipo" class="form-control">
+                    <option value="Nafta">Nafta</option>
+                    <option value="GNC">GNC</option>
+                    <option value="Lavado">Lavado</option>
+                    <option value="Arreglo">Arreglo Mecánico</option>
+                    <option value="Peaje">Peaje</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monto ($)</label>
+                <input type="number" id="gasto-monto" class="form-control" placeholder="15000">
+            </div>
+            <button class="btn btn-primary" onclick="guardarGastoChofer()">Registrar Gasto</button>
         </div>
+    </div>
 
-        <div class="action-grid">
-          <button class="btn-action" onclick="openGastosModal()">⛽ Cargar Gasto</button>
-          <button class="btn-action" style="background:#ffebee; color:#d32f2f; border-color:#ffcdd2;" onclick="setAvailable(false)">🔴 Desconectar</button>
-        </div>
-      `;
-    }
+    <div class="sticky-footer">
+        <button class="btn btn-primary" onclick="openModal('modal-gastos-lista')">📜 Ver Gastos</button>
+        <button class="btn btn-accent" onclick="openModal('modal-liquidacion')">💰 Mi Liquidación</button>
+    </div>
 
-    function acceptReserva(idx) {
-      let reservas = JSON.parse(localStorage.getItem('remis3a_reservas') || '[]');
-      let rev = reservas.splice(idx, 1)[0];
-      localStorage.setItem('remis3a_reservas', JSON.stringify(reservas));
-      rev.status = 'ASIGNADO';
-      rev.driver = { name: driverProfile.name, photo: '👨', plate: driverProfile.plate, model: driverProfile.model, rating: '4.9' };
-      localStorage.setItem('remis3a_active_order', JSON.stringify(rev));
-      checkActiveTrip();
-      renderSheet();
-    }
-
-    function renderIncomingOrderUI(container, order) {
-      container.innerHTML = `
-        <div class="order-card">
-          <h3 style="color:#2e7d32; margin-bottom:8px; font-weight:900;">🔔 ¡NUEVO PEDIDO!</h3>
-          <p><strong>Destino:</strong> ${order.destName}</p>
-          <p><strong>Estimado:</strong> $${order.estimatedFare} (${order.payment})</p>
-          ${order.note ? `<p style="color:#f57c00; font-weight:bold;">Nota: ${order.note}</p>` : ''}
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
-            <button class="btn-main" style="height:50px; font-size:1rem;" onclick="acceptOrder()">ACEPTAR</button>
-            <button class="btn-danger" style="height:50px; margin-top:0;" onclick="rejectOrder()">RECHAZAR</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function acceptOrder() {
-      let pending = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
-      pending.shift();
-      localStorage.setItem('remis3a_pending_orders', JSON.stringify(pending));
-
-      pendingOrderIncoming.status = 'ASIGNADO';
-      pendingOrderIncoming.driver = {
-        name: driverProfile.name,
-        photo: '👨',
-        plate: driverProfile.plate,
-        model: driverProfile.model,
-        rating: '4.9'
-      };
-      pendingOrderIncoming.driverPos = TRES_ARROYOS;
-
-      localStorage.setItem('remis3a_active_order', JSON.stringify(pendingOrderIncoming));
-      activeTrip = pendingOrderIncoming;
-      pendingOrderIncoming = null;
-      renderSheet();
-    }
-
-    function rejectOrder() {
-      pendingOrderIncoming = null;
-      renderSheet();
-    }
-
-    function renderAcceptedTripUI(container, order) {
-      container.innerHTML = `
-        <div style="background:#e3f2fd; color:#1565c0; padding:10px; text-align:center; font-weight:900; border-radius:10px; margin-bottom:12px; border:1px solid #bbdefb;">
-          🚖 EN CAMINO A BUSCAR AL PASAJERO
-        </div>
-        <div class="dash-box">
-          <p><strong>Destino Final:</strong> ${order.destName}</p>
-        </div>
-        <button class="btn-main" style="background:#1976d2; color:#fff; margin-bottom:8px;" onclick="notifyArrival()">📢 YA LLEGUÉ (AVISAR)</button>
-        <button class="btn-main" onclick="startTaximeter()">▶️ INICIAR VIAJE</button>
-        <button class="btn-action" style="width:100%; margin-top:8px;" onclick="passengerNoShow()">⚠️ PASAJERO NO SALIÓ (COBRAR $500)</button>
-      `;
-    }
-
-    function notifyArrival() { alert('Aviso enviado al pasajero. El chofer espera gratis.'); }
-
-    function passengerNoShow() {
-      if (confirm('¿Pasaron 10 min? Se acreditarán $500.')) {
-        let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":0, "total":0}');
-        stats.total += 500;
-        localStorage.setItem('remis3a_driver_stats', JSON.stringify(stats));
-        localStorage.removeItem('remis3a_active_order');
-        activeTrip = null;
-        renderSheet();
-      }
-    }
-
-    function startTaximeter() {
-      activeTrip.status = 'EN_VIAJE';
-      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
-      liveKm = 0.1;
-      clearInterval(taximeterInterval);
-      taximeterInterval = setInterval(() => {
-        liveKm += 0.05;
-        let calc = BAJADA + (liveKm * POR_KM) + ((activeTrip.paradas || 0) * EXTRA_PARADA);
-        activeTrip.currentFare = Math.round(Math.max(calc, MINIMO));
-        activeTrip.distKm = Math.round(liveKm * 10) / 10;
-        localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
-        renderSheet();
-      }, 2000);
-      renderSheet();
-    }
-
-    function renderTaximeterUI(container, order) {
-      container.innerHTML = `
-        <div class="taximetro">
-          <span style="font-size:0.8rem; color:var(--subtext); font-weight:800;">TAXÍMETRO REMIS 3A</span>
-          <div class="price">$${order.currentFare || MINIMO}</div>
-          <div style="font-size:0.9rem; font-weight:700;">Distancia: ${order.distKm || 0.1} KM</div>
-        </div>
-        <button class="btn-main" style="background:#00c853;" onclick="finishTrip()">🏁 FINALIZAR VIAJE</button>
-      `;
-    }
-
-    function finishTrip() {
-      clearInterval(taximeterInterval);
-      activeTrip.status = 'FINALIZADO';
-      activeTrip.finalFare = activeTrip.currentFare || MINIMO;
-      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
-      renderSheet();
-    }
-
-    function renderFinishTripUI(container, order) {
-      let total = order.finalFare || MINIMO;
-      let appCommission = total * APP_FEE;
-      let driverEarnings = total - appCommission;
-
-      container.innerHTML = `
-        <div style="text-align:center;">
-          <h2 style="color:#00c853; margin-bottom:12px; font-weight:900;">💰 DESGLOSE</h2>
-          <div class="dash-box" style="text-align:left;">
-            <p><strong>Total Cobrado:</strong> $${total}</p>
-            <p><strong>Comisión App (5%):</strong> -$${appCommission}</p>
-            <hr style="border-color:var(--border); margin:8px 0;">
-            <p style="font-size:1.2rem; color:#2e7d32; font-weight:900;">Te quedan: $${driverEarnings}</p>
-          </div>
-          <button class="btn-main" onclick="confirmPayment()">COBRAR Y REINICIAR</button>
-        </div>
-      `;
-    }
-
-    function confirmPayment() {
-      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":0, "total":0}');
-      stats.trips += 1;
-      stats.total += activeTrip.finalFare;
-      localStorage.setItem('remis3a_driver_stats', JSON.stringify(stats));
-      localStorage.removeItem('remis3a_active_order');
-      activeTrip = null;
-      renderSheet();
-    }
-
-    function openGastosModal() {
-      let modal = document.getElementById('driver-modal');
-      modal.style.display = 'flex';
-      modal.innerHTML = `
+    <div class="modal" id="modal-perfil-chofer">
         <div class="modal-content">
-          <h3 style="font-weight:900; margin-bottom:10px;">⛽ Cargar Gasto</h3>
-          <div class="form-group"><label>Monto ($)</label><input type="number" id="gasto-monto" placeholder="Ej: 5000"></div>
-          <button class="btn-main" onclick="alert('Gasto guardado.'); document.getElementById('driver-modal').style.display='none'">GUARDAR</button>
-          <button class="btn-danger" onclick="document.getElementById('driver-modal').style.display='none'">CERRAR</button>
+            <button class="modal-close" onclick="closeModal('modal-perfil-chofer')">✕</button>
+            <h3 class="card-title">👨‍✈️ Perfil del Chofer</h3>
+            <div class="form-group"><label class="form-label">Nombre Completo</label><input type="text" id="ch-nombre" class="form-control" value="Juan Pérez"></div>
+            <div class="form-group"><label class="form-label">Patente</label><input type="text" id="ch-patente" class="form-control" value="AB 123 CD"></div>
+            <div class="form-group"><label class="form-label">Modelo de Auto</label><input type="text" id="ch-modelo" class="form-control" value="Fiat Cronos Blanco 2022"></div>
+            <button class="btn btn-primary" onclick="guardarPerfilChofer()">Guardar Datos</button>
         </div>
-      `;
-    }
+    </div>
 
-    function openAdminModal() {
-      let pass = prompt('Clave Admin (1234):');
-      if (pass !== '1234') { alert('Clave incorrecta'); return; }
-      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":8, "total":25000}');
-      let modal = document.getElementById('driver-modal');
-      modal.style.display = 'flex';
-      modal.innerHTML = `
+    <div class="modal" id="modal-liquidacion">
         <div class="modal-content">
-          <h2 style="font-weight:900; margin-bottom:10px;">🏢 BASE REMIS 3A</h2>
-          <div class="dash-box">
-            <p><strong>Recaudación Total:</strong> $${stats.total}</p>
-            <p style="color:#00c853; font-weight:900;"><strong>Ganancia App (5%):</strong> $${stats.total * APP_FEE}</p>
-          </div>
-          <button class="btn-danger" onclick="document.getElementById('driver-modal').style.display='none'">CERRAR</button>
+            <button class="modal-close" onclick="closeModal('modal-liquidacion')">✕</button>
+            <h3 class="card-title">💰 Liquidación Semanal</h3>
+            <p class="text-sm mb-2">Resumen de cuenta corriente con la base.</p>
+            <div style="background: var(--bg-color); padding: 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.6;">
+                Total Facturado Semana: <strong>$145.000</strong><br>
+                Comisión Base App (5%): <strong style="color: var(--danger);">-$7.250</strong><br>
+                Total Líquido Chofer: <strong style="color: var(--success);">$137.750</strong>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="window.print()">🖨️ Imprimir Liquidación</button>
         </div>
-      `;
-    }
-  </script>
+    </div>
+
+    <div class="modal" id="modal-gastos-lista">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-gastos-lista')">✕</button>
+            <h3 class="card-title">📜 Registro de Gastos</h3>
+            <div id="lista-gastos-container" style="max-height: 50vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        let enServicio = false;
+        let map;
+
+        window.onload = function() {
+            map = L.map('map').setView([-38.3750, -60.2730], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+            actualizarListaGastos();
+        };
+
+        function toggleDisponibilidad() {
+            enServicio = !enServicio;
+            const btn = document.getElementById('btn-toggle-disp');
+            const txt = document.getElementById('estado-chofer-txt');
+            if(enServicio) {
+                btn.innerText = "DESCONECTARME (OFFLINE)";
+                btn.className = "btn btn-danger";
+                txt.innerText = "EN SERVICIO (RECIBIENDO VIAJES)";
+                txt.style.color = "var(--success)";
+                mostrarExito("Estás en línea y visible en el mapa.");
+            } else {
+                btn.innerText = "PONERME EN SERVICIO (ONLINE)";
+                btn.className = "btn btn-success";
+                txt.innerText = "OFICINA / DESCONECTADO";
+                txt.style.color = "var(--danger)";
+                mostrarExito("Te desconectaste del sistema.");
+            }
+        }
+
+        function guardarGastoChofer() {
+            let tipo = document.getElementById('gasto-tipo').value;
+            let monto = parseFloat(document.getElementById('gasto-monto').value);
+            if(!monto || monto <= 0) { mostrarError("Ingrese un monto válido"); return; }
+            let gastos = JSON.parse(localStorage.getItem('remis3a_gastos_chofer') || '[]');
+            gastos.push({ id: Date.now(), tipo, monto, fecha: new Date().toLocaleDateString() });
+            localStorage.setItem('remis3a_gastos_chofer', JSON.stringify(gastos));
+            document.getElementById('gasto-monto').value = '';
+            mostrarExito("Gasto registrado correctamente");
+            actualizarListaGastos();
+        }
+
+        function actualizarListaGastos() {
+            let gastos = JSON.parse(localStorage.getItem('remis3a_gastos_chofer') || '[]');
+            let cont = document.getElementById('lista-gastos-container');
+            cont.innerHTML = gastos.length === 0 ? '<p class="text-sm">Sin gastos cargados hoy.</p>' : '';
+            gastos.forEach(g => {
+                let d = document.createElement('div');
+                d.style.background = 'var(--bg-color)'; d.style.padding = '10px'; d.style.borderRadius = '8px'; d.style.marginBottom = '8px';
+                d.innerHTML = `<div class="flex-between"><strong>${g.tipo}</strong> <span style="color:var(--danger)">-$${g.monto}</span></div><div class="text-sm">${g.fecha}</div>`;
+                cont.appendChild(d);
+            });
+        }
+
+        function guardarPerfilChofer() {
+            localStorage.setItem('remis3a_perfil_chofer', JSON.stringify({ nombre: document.getElementById('ch-nombre').value, patente: document.getElementById('ch-patente').value, modelo: document.getElementById('ch-modelo').value }));
+            closeModal('modal-perfil-chofer');
+            mostrarExito("Perfil de chofer guardado.");
+        }
+
+        function llamarBase() { window.location.href = 'tel:2983123456'; }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function mostrarError(msg) { const e = document.getElementById('alert-error'); e.innerText = msg; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 4000); }
+        function mostrarExito(msg) { const e = document.getElementById('alert-success'); e.innerText = msg; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 4000); }
+    </script>
 </body>
 </html>
