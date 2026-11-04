@@ -1,363 +1,685 @@
+<!-- Save as: pasajero/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Remis Neco - Pasajero</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #FFC300;
-            --primary-dark: #e0ab00;
-            --bg: #0d0d0d;
-            --card: #18181b;
-            --card-border: #27272a;
-            --text: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
-        
-        header {
-            background: var(--card); padding: 14px 18px; border-bottom: 1px solid var(--card-border);
-            display: flex; justify-content: space-between; align-items: center; z-index: 1000;
-        }
-        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-        .badge { background: rgba(255, 195, 0, 0.15); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>REMIS 3A - Pasajero</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --accent: #2196f3;
+      --accent-green: #4caf50;
+      --accent-red: #f44336;
+      --text: #ffffff;
+      --subtext: #aaaaaa;
+      --border: #333333;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { height: 60px; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 1000; border-bottom: 1px solid var(--border); }
+    header h1 { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .btn-header { height: 42px; padding: 0 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; }
+    .btn-sos { background: var(--accent-red); }
+    .btn-base { background: #333; }
+    
+    #map-container { flex: 1; position: relative; width: 100%; height: 100%; }
+    #map { width: 100%; height: 100%; }
+    .btn-locate { position: absolute; top: 12px; right: 12px; z-index: 999; background: #000; color: #fff; border: 1px solid var(--border); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+    
+    .sheet { background: var(--card); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 16px; border-top: 1px solid var(--border); max-height: 65vh; overflow-y: auto; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); }
+    .form-group { margin-bottom: 12px; }
+    label { font-size: 0.75rem; color: var(--subtext); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; }
+    input, select { width: 100%; height: 48px; background: #2a2a2a; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 0 12px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); }
+    
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 6px; }
+    .chip { background: #2a2a2a; border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .chip:active { background: #333; }
 
-        #map-container { position: relative; width: 100%; height: 45vh; min-height: 280px; }
-        #map { width: 100%; height: 100%; }
+    .btn-main { width: 100%; height: 60px; background: var(--accent-green); color: #fff; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 8px; box-shadow: 0 4px 15px rgba(76,175,80,0.4); }
+    .btn-main:active { transform: scale(0.98); }
+    .btn-cancel { background: var(--accent-red); margin-top: 8px; width: 100%; height: 50px; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; }
 
-        .btn-recenter {
-            position: absolute; bottom: 16px; right: 16px; z-index: 500;
-            background: var(--card); color: var(--text); border: 1px solid var(--card-border);
-            padding: 10px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer; display: flex; align-items: center; gap: 6px;
-        }
+    .fare-box { background: #141414; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin: 10px 0; font-size: 0.85rem; text-align: center; }
+    .fare-box strong { font-size: 1.1rem; color: var(--accent-green); display: block; margin-bottom: 4px; }
+    
+    .status-banner { background: #1565c0; color: #fff; padding: 12px; text-align: center; font-weight: bold; border-radius: 8px; margin-bottom: 12px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
-        .panel {
-            background: var(--card); border-radius: 20px 20px 0 0; padding: 20px;
-            display: flex; flex-direction: column; gap: 14px; z-index: 1000;
-            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); flex: 1; margin-top: -15px;
-        }
+    .driver-card { background: #252525; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+    .driver-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .driver-avatar { width: 50px; height: 50px; border-radius: 50%; background: #444; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+    .driver-info h3 { font-size: 1rem; margin-bottom: 2px; }
+    .driver-info p { font-size: 0.8rem; color: var(--subtext); }
 
-        .btn-main {
-            background: var(--primary); color: #000; border: none; padding: 16px;
-            border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer;
-            width: 100%; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .btn-main:disabled { background: #27272a; color: #71717a; cursor: not-allowed; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .btn-action { height: 48px; background: #333; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+    
+    .chat-box { height: 120px; background: #141414; border: 1px solid var(--border); border-radius: 8px; overflow-y: auto; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .msg { padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; max-width: 80%; }
+    .msg.in { background: #2a2a2a; align-self: flex-start; }
+    .msg.out { background: #1565c0; align-self: flex-end; }
 
-        .gps-alert {
-            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5;
-            padding: 14px; border-radius: 12px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px;
-        }
+    .disabled-overlay { position: relative; opacity: 0.6; pointer-events: none; }
+    .lock-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
 
-        .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
-        label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
-        input {
-            width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--card-border);
-            background: #09090b; color: white; font-size: 0.95rem; outline: none;
-        }
-        input:focus { border-color: var(--primary); }
+    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: var(--card); width: 100%; max-width: 400px; border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
 
-        .suggestions {
-            position: absolute; top: 100%; left: 0; right: 0; background: #18181b;
-            border: 1px solid var(--card-border); border-radius: 0 0 10px 10px;
-            max-height: 150px; overflow-y: auto; z-index: 2000;
-        }
-        .suggestion-item { padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid #27272a; cursor: pointer; }
-        .suggestion-item:hover { background: #27272a; }
+    .pulsing-dot { width: 14px; height: 14px; background: #2196f3; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 rgba(33, 150, 243, 0.4); animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(33, 150, 243, 0); } 100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); } }
 
-        .status-box {
-            background: rgba(255, 195, 0, 0.1); border: 1px solid var(--primary);
-            padding: 16px; border-radius: 12px; text-align: center;
-        }
-        .pulse-loader {
-            display: inline-block; width: 12px; height: 12px; background: var(--primary);
-            border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
-
-        .driver-card {
-            background: #09090b; border: 1px solid var(--success); border-radius: 12px;
-            padding: 14px; display: flex; flex-direction: column; gap: 6px;
-        }
-
-        .user-marker {
-            width: 20px; height: 20px; background: #38bdf8; border: 3px solid #fff;
-            border-radius: 50%; box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
-        }
-        .driver-marker {
-            width: 28px; height: 28px; background: var(--primary); border: 2px solid #000;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
-            box-shadow: 0 0 10px rgba(255, 195, 0, 0.8);
-        }
-    </style>
+    .stars { color: #fbc02d; font-size: 1.2rem; cursor: pointer; }
+    .tag { display: inline-block; background: #2a2a2a; border: 1px solid var(--border); padding: 6px 10px; border-radius: 12px; font-size: 0.75rem; margin: 2px; cursor: pointer; }
+    .tag.selected { background: var(--accent); border-color: var(--accent); }
+  </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand">🚖 REMIS NECO</div>
-        <div class="badge">PASAJERO</div>
-    </header>
-
-    <div id="map-container">
-        <div id="map"></div>
-        <button class="btn-recenter" onclick="recentrarMapa()">🎯 Mi ubicación</button>
+  <header>
+    <h1>REMIS 3A</h1>
+    <div style="display: flex; gap: 6px;">
+      <button class="btn-header btn-sos" onclick="triggerSOS()">🚨 SOS</button>
+      <button class="btn-header btn-base" onclick="window.location.href='tel:2983123456'">📞 Base</button>
     </div>
+  </header>
 
-    <div class="panel">
-        <div id="gps-box">
-            <button class="btn-main" style="background:#38bdf8; color:#000;" onclick="pedirUbicacionReal()">📍 Activar ubicación</button>
+  <div id="map-container">
+    <div id="map"></div>
+    <button class="btn-locate" onclick="centerMap()">🎯</button>
+  </div>
+
+  <div class="sheet" id="main-sheet">
+    <!-- UI SE GENERARÁ DINÁMICAMENTE SEGÚN ESTADO -->
+  </div>
+
+  <!-- MODAL HISTORIAL / BOTONES EXTRA -->
+  <div id="modal-container" style="display: none;"></div>
+
+  <script>
+    // CONSTANTES Y CONFIGURACIÓN
+    const TRES_ARROYOS = [-38.375, -60.273];
+    const BAJADA = 1500;
+    const POR_KM = 300;
+    const MINIMO = 2000;
+    const EXTRA_PARADA = 500;
+    const CANCELACION_CHOFER = 500;
+
+    const DESTINOS_FIJOS = {
+      'Claromecó': 15000,
+      'Orense': 12000,
+      'San Mayol': 8000,
+      'Reta': 18000,
+      'Cascallares': 6000
+    };
+
+    const LUGARES = [
+      { name: "Hospital Pirovano", lat: -38.378, lng: -60.279 },
+      { name: "Terminal de Ómnibus", lat: -38.368, lng: -60.268 },
+      { name: "Municipalidad", lat: -38.375, lng: -60.274 },
+      { name: "Escuela 1", lat: -38.374, lng: -60.272 },
+      { name: "Club Huracán", lat: -38.380, lng: -60.265 },
+      { name: "Casino Claromecó (Ref)", lat: -38.855, lng: -60.075 },
+      { name: "Moreno 200", lat: -38.375, lng: -60.271 },
+      { name: "Rivadavia 500", lat: -38.372, lng: -60.275 },
+      { name: "San Martín 100", lat: -38.376, lng: -60.273 },
+      { name: "Libertad 400", lat: -38.371, lng: -60.270 },
+      { name: "9 de Julio 300", lat: -38.377, lng: -60.276 },
+      { name: "Sarmiento 150", lat: -38.373, lng: -60.272 },
+      { name: "Av. del Trabajador 800", lat: -38.365, lng: -60.280 },
+      { name: "Av. Ituzaingó 600", lat: -38.382, lng: -60.268 }
+    ];
+
+    // ESTADO
+    let map, userMarker, driverMarker, routePolyline;
+    let userPos = TRES_ARROYOS;
+    let selectedDest = null;
+    let paradasCount = 0;
+    let orderState = null; // null, 'BUSCANDO', 'ASIGNADO', 'EN_VIAJE', 'FINALIZADO'
+    let driverPos = null;
+    let mockDriverSim = null;
+
+    // INICIALIZACIÓN
+    window.onload = () => {
+      initMap();
+      checkActiveOrder();
+      renderSheet();
+      window.addEventListener('storage', syncState);
+    };
+
+    function initMap() {
+      map = L.map('map', { zoomControl: false }).setView(TRES_ARROYOS, 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Icono Usuario
+      const userIcon = L.divIcon({ className: 'pulsing-dot', iconSize: [14, 14], iconAnchor: [7, 7] });
+      userMarker = L.marker(TRES_ARROYOS, { icon: userIcon }).addTo(map);
+
+      // GPS Real
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(pos => {
+          userPos = [pos.coords.latitude, pos.coords.longitude];
+          userMarker.setLatLng(userPos);
+        }, err => console.log(err), { enableHighAccuracy: true });
+      }
+    }
+
+    function centerMap() {
+      map.setView(userPos, 16);
+    }
+
+    function syncState() {
+      checkActiveOrder();
+      renderSheet();
+    }
+
+    function checkActiveOrder() {
+      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+      if (active) {
+        orderState = active.status;
+        if (active.driverPos) driverPos = active.driverPos;
+        updateMapMarkers(active);
+      } else {
+        orderState = null;
+        if (driverMarker) map.removeLayer(driverMarker);
+        if (routePolyline) map.removeLayer(routePolyline);
+      }
+    }
+
+    function updateMapMarkers(order) {
+      if (order.driverPos) {
+        if (!driverMarker) {
+          const carIcon = L.divIcon({ html: '🚗', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+          driverMarker = L.marker(order.driverPos, { icon: carIcon }).addTo(map);
+        } else {
+          driverMarker.setLatLng(order.driverPos);
+        }
+      }
+      if (order.destPos) {
+        if (routePolyline) map.removeLayer(routePolyline);
+        let start = order.status === 'EN_VIAJE' ? (order.driverPos || userPos) : userPos;
+        routePolyline = L.polyline([start, order.destPos], { color: '#2196f3', weight: 4, dashArray: '8, 8' }).addTo(map);
+      }
+    }
+
+    // CÁLCULO DE TAFIRA
+    function calculateFare(distKm, paradas = 0, destName = "") {
+      for (let fijo in DESTINOS_FIJOS) {
+        if (destName.toLowerCase().includes(fijo.toLowerCase())) {
+          return { total: DESTINOS_FIJOS[fijo], isFixed: true, label: `Viaje Fijo a ${fijo}` };
+        }
+      }
+      let calc = BAJADA + (distKm * POR_KM) + (paradas * EXTRA_PARADA);
+      let total = Math.max(calc, MINIMO);
+      return { total: Math.round(total), isFixed: false, calc: Math.round(calc) };
+    }
+
+    function getDistanceKm(lat1, lon1, lat2, lon2) {
+      let R = 6371;
+      let dLat = (lat2-lat1) * Math.PI / 180;
+      let dLon = (lon2-lon1) * Math.PI / 180;
+      let a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // RENDERIZADO DE INTERFAZ
+    function renderSheet() {
+      const sheet = document.getElementById('main-sheet');
+      const activeOrder = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+
+      if (!activeOrder) {
+        renderFormUI(sheet);
+      } else if (activeOrder.status === 'BUSCANDO') {
+        renderBuscandoUI(sheet, activeOrder);
+      } else if (activeOrder.status === 'ASIGNADO') {
+        renderAsignadoUI(sheet, activeOrder);
+      } else if (activeOrder.status === 'EN_VIAJE') {
+        renderEnViajeUI(sheet, activeOrder);
+      } else if (activeOrder.status === 'FINALIZADO') {
+        renderFinalizadoUI(sheet, activeOrder);
+      }
+    }
+
+    function renderFormUI(container) {
+      let destName = selectedDest ? selectedDest.name : '';
+      let distKm = selectedDest ? getDistanceKm(userPos[0], userPos[1], selectedDest.lat, selectedDest.lng) : 3.2;
+      distKm = Math.max(0.5, Math.round(distKm * 10) / 10);
+      let fare = calculateFare(distKm, paradasCount, destName);
+
+      container.innerHTML = `
+        <div class="form-group">
+          <label>📍 Origen</label>
+          <input type="text" value="Mi Ubicación Actual (GPS)" readonly />
         </div>
 
-        <div id="gps-error" class="gps-alert" style="display:none;">
-            <div><strong>⚠️ Bloqueaste la ubicación.</strong></div>
-            <div>Andá a Chrome > 3 puntitos > Configuración del sitio > Ubicación > Permitir, cerrá Chrome y volvé a entrar.</div>
-            <button class="btn-main" style="background:var(--danger); color:white; margin-top:6px;" onclick="pedirUbicacionReal()">Volver a pedir permiso</button>
+        <div class="form-group">
+          <label>🏁 Destino</label>
+          <input type="text" id="dest-input" placeholder="Buscar calle o lugar en Tres Arroyos..." value="${destName}" oninput="searchDest(this.value)" />
+          <div class="chips" id="dest-suggestions">
+            ${LUGARES.slice(0, 5).map(l => `<div class="chip" onclick='selectDestination(${JSON.stringify(l)})'>📍 ${l.name}</div>`).join('')}
+          </div>
         </div>
 
-        <div id="form-viaje" style="display:none; flex-direction:column; gap:12px;">
-            <div class="form-group">
-                <label>Origen (Tu posición real)</label>
-                <input type="text" id="origen_texto" placeholder="Obteniendo dirección..." readonly style="background:#27272a;">
+        <div class="form-group">
+          <label>⭐ Lugares Guardados</label>
+          <div class="chips">
+            <div class="chip" onclick="selectDestination({name:'Casa', lat:-38.376, lng:-60.270})">🏠 Casa</div>
+            <div class="chip" onclick="selectDestination({name:'Trabajo', lat:-38.370, lng:-60.275})">💼 Trabajo</div>
+            <div class="chip" onclick="selectDestination({name:'Hospital', lat:-38.378, lng:-60.279})">🏥 Hospital</div>
+            <div class="chip" onclick="selectDestination({name:'Abuela', lat:-38.380, lng:-60.268})">👵 Abuela</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group">
+            <label>⏰ Cuándo</label>
+            <select id="select-when">
+              <option value="AHORA">AHORA</option>
+              <option value="RESERVA">RESERVAR</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🚘 Tipo Auto</label>
+            <select id="select-auto">
+              <option value="Común">Común</option>
+              <option value="Camioneta">Camioneta Baúl Grande</option>
+              <option value="5 Pasajeros">5 Pasajeros</option>
+              <option value="Silla Bebé">Con Silla Bebé</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group">
+            <label>💳 Pago</label>
+            <select id="select-pago">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Cuenta Corriente">Cta. Corriente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🛑 Paradas Extras ($500)</label>
+            <div style="display:flex; gap:4px;">
+              <button style="flex:1; background:#2a2a2a; border:1px solid #333; color:#fff; border-radius:8px;" onclick="addParada(-1)">-</button>
+              <span style="line-height:48px; width:30px; text-align:center; font-weight:bold;">${paradasCount}</span>
+              <button style="flex:1; background:#2a2a2a; border:1px solid #333; color:#fff; border-radius:8px;" onclick="addParada(1)">+</button>
             </div>
+          </div>
+        </div>
 
-            <div class="form-group">
-                <label>Destino</label>
-                <input type="text" id="destino_texto" placeholder="Ej: Avenida Moreno 500, Tres Arroyos" oninput="buscarAutocomplete(this.value)">
-                <div class="suggestions" id="suggestions" style="display:none;"></div>
+        <div class="form-group">
+          <label>📝 Nota al Chofer</label>
+          <input type="text" id="order-note" placeholder="Ej: 2 valijas, voy con perro, necesito ayuda..." />
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="for-other" style="width:20px; height:20px;" onchange="toggleForOther(this.checked)">
+          <label for="for-other" style="margin:0; text-transform:none; font-size:0.9rem;">Pedir viaje para otra persona</label>
+        </div>
+        <div id="other-info" style="display:none;" class="form-group">
+          <input type="text" id="other-name" placeholder="Nombre de la persona" style="margin-bottom:4px;" />
+          <input type="tel" id="other-phone" placeholder="Teléfono de la persona" />
+        </div>
+
+        <div class="fare-box">
+          ${fare.isFixed ? 
+            `<strong>TARIFA FIJA: $${fare.total}</strong> (${fare.label})` : 
+            `<strong>Est. Total: $${fare.total}</strong> ${distKm}km - Bajada $${BAJADA} + KM $${Math.round(distKm*POR_KM)} ${paradasCount > 0 ? '+ Paradas $'+(paradasCount*500):''}`
+          }
+        </div>
+
+        <button class="btn-main" onclick="submitOrder()">PEDIR REMIS</button>
+        
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn-action" style="flex:1;" onclick="showHistory()">📜 Historial</button>
+          <button class="btn-action" style="flex:1;" onclick="reportForgot()">🎒 Olvidé Algo</button>
+          <button class="btn-action" style="flex:1;" onclick="claimBase()">⚠️ Reclamar</button>
+        </div>
+      `;
+    }
+
+    function renderBuscandoUI(container, order) {
+      container.innerHTML = `
+        <div class="disabled-overlay">
+          <span class="lock-badge">🔒 VIAJE EN CURSO - NO SE PUEDE MODIFICAR</span>
+        </div>
+        <div class="status-banner">
+          ⏳ BUSCANDO CHOFER MÁS CERCANO...<br>
+          <small style="font-weight:normal;">Choferes conectados en Tres Arroyos: 5</small>
+        </div>
+        <div class="fare-box">
+          <strong>Origen:</strong> ${order.originName}<br>
+          <strong>Destino:</strong> ${order.destName}<br>
+          <strong>Estimado:</strong> $${order.estimatedFare}
+        </div>
+        <p style="text-align:center; font-size:0.8rem; color:var(--subtext); margin-bottom:8px;">Si no hay autos disponibles quedarás en cola automáticamente.</p>
+        <button class="btn-cancel" onclick="cancelOrder(false)">CANCELAR PEDIDO (GRATIS)</button>
+      `;
+    }
+
+    function renderAsignadoUI(container, order) {
+      const driver = order.driver || { name: 'Juan Pérez', photo: '👨', plate: 'AB 123 CD', model: 'Fiat Cronos Blanco 2023', rating: '4.8 (234 viajes)' };
+      container.innerHTML = `
+        <div class="status-banner" style="background:#2e7d32;">
+          ✅ CHOFER ASIGNADO
+        </div>
+        <div class="driver-card">
+          <div class="driver-header">
+            <div class="driver-avatar">${driver.photo}</div>
+            <div class="driver-info">
+              <h3>${driver.name} ⭐ ${driver.rating}</h3>
+              <p>${driver.model}</p>
+              <p>Patente: <strong>${driver.plate}</strong></p>
             </div>
-
-            <button class="btn-main" id="btn-pedir" onclick="solicitarRemis()">Pedir Remis Ahora</button>
+          </div>
+          <div style="background:#1a1a1a; padding:8px; border-radius:6px; font-weight:bold; text-align:center; color:var(--accent); font-size:0.9rem;">
+            LLEGA EN 4 MIN - A 6 CUADRAS
+          </div>
         </div>
 
-        <div id="status-buscando" class="status-box" style="display:none;">
-            <div><span class="pulse-loader"></span><strong style="color:var(--primary);">Buscando chofer cercano...</strong></div>
-            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Tu viaje fue cargado. Un chofer aceptará en breve.</div>
+        <div class="chat-box" id="chat-box">
+          <div class="msg in">Juan: Hola! Ya voy en camino.</div>
+          ${(order.chat || []).map(m => `<div class="msg ${m.sender==='user'?'out':'in'}">${m.text}</div>`).join('')}
         </div>
 
-        <div id="status-chofer" class="driver-card" style="display:none;">
-            <div style="color:var(--success); font-weight:800; font-size:0.9rem;">✅ ¡TU CHOFER VIENE EN CAMINO!</div>
-            <div id="driver-info" style="font-weight:700; font-size:1.05rem;">-</div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">Podés ver el recorrido en tiempo real en el mapa.</div>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <input type="text" id="chat-input" placeholder="Enviar mensaje..." style="height:40px;" />
+          <button style="width:60px; background:var(--accent); border:none; border-radius:8px; color:#fff; font-weight:bold;" onclick="sendChatMessage()">Enviar</button>
         </div>
-    </div>
+        <div class="chips" style="margin-bottom:8px;">
+          <div class="chip" onclick="quickChat('Ya salgo')">"Ya salgo"</div>
+          <div class="chip" onclick="quickChat('Estoy en la puerta')">"Estoy en la puerta"</div>
+        </div>
 
-    <script>
-        const SUPABASE_URL = "PONÉ ACÁ TU URL";
-        const SUPABASE_KEY = "PONÉ ACÁ TU KEY";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        <div class="action-grid">
+          <button class="btn-action" onclick="window.location.href='tel:2983123456'">📞 Llamar</button>
+          <button class="btn-action" onclick="window.location.href='https://wa.me/542983123456'">💬 WhatsApp</button>
+        </div>
+        <button class="btn-action" style="width:100%; margin-top:6px;" onclick="shareLiveTrip()">🔗 Compartir Viaje en Vivo</button>
 
-        let map, userMarker, driverMarker;
-        let origenLat = null, origenLng = null;
-        let destinoLat = null, destinoLng = null;
-        let viajeIdActual = null;
-        let watchPosId = null;
+        <button class="btn-cancel" onclick="cancelOrder(true)">CANCELAR VIAJE (COBRO $500)</button>
+      `;
+    }
 
-        window.addEventListener('load', () => {
-            initMap();
-        });
+    function renderEnViajeUI(container, order) {
+      container.innerHTML = `
+        <div class="status-banner" style="background:#1565c0;">
+          🚖 EN VIAJE A DESTINO
+        </div>
 
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([-38.3764, -60.2721], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            setTimeout(() => { map.invalidateSize(); }, 200);
+        <div style="background:#000; padding:16px; border-radius:12px; border:1px solid var(--border); text-align:center; margin-bottom:12px;">
+          <div style="font-size:0.8rem; color:var(--subtext);">TAXÍMETRO EN VIVO</div>
+          <div style="font-size:2.2rem; font-weight:900; color:var(--accent-green);">$${order.currentFare || order.estimatedFare}</div>
+          <div style="font-size:0.85rem; color:#fff;">${order.distKm || 3.2} KM | ${order.duration || '8 min'}</div>
+        </div>
+
+        <div class="action-grid" style="margin-bottom:8px;">
+          <button class="btn-action" onclick="changeDestPrompt()">📍 Cambiar Destino</button>
+          <button class="btn-action" onclick="addParadaEnViaje()">🛑 Parada Extra (+$500)</button>
+        </div>
+
+        <button class="btn-main" style="background:var(--accent-red); height:50px; font-size:1rem;" onclick="triggerPanic()">🚨 BOTÓN PÁNICO DE EMERGENCIA</button>
+      `;
+    }
+
+    function renderFinalizadoUI(container, order) {
+      let fare = order.finalFare || order.estimatedFare;
+      container.innerHTML = `
+        <div style="text-align:center; padding:10px;">
+          <h2 style="color:var(--accent-green); margin-bottom:8px;">🏁 VIAJE FINALIZADO</h2>
+          <div style="background:#141414; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px; text-align:left;">
+            <p><strong>Bajada de bandera:</strong> $${BAJADA}</p>
+            <p><strong>Distancia recorida:</strong> $${fare - BAJADA - (order.paradas*500)}</p>
+            ${order.paradas ? `<p><strong>Paradas (${order.paradas}):</strong> $${order.paradas*500}</p>` : ''}
+            <hr style="border-color:#333; margin:8px 0;">
+            <p style="font-size:1.3rem; font-weight:bold; color:#fff;">TOTAL A PAGAR: $${fare}</p>
+            <p style="font-size:0.75rem; color:var(--subtext);">SIN recargo nocturno | SIN espera | SIN sorpresas</p>
+          </div>
+
+          <div class="form-group" style="text-align:left;">
+            <label>Método de Pago:</label>
+            <select id="pay-method" onchange="togglePayDetails(this.value)">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia bancaria</option>
+              <option value="Cuenta Corriente">Cuenta Corriente</option>
+            </select>
+          </div>
+
+          <div id="transfer-details" style="display:none; background:#222; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.85rem;">
+            Alias MP: <strong>remis3a.mp</strong>
+            <button onclick="navigator.clipboard.writeText('remis3a.mp'); alert('Alias copiado!');" style="margin-left:8px; padding:2px 6px; background:#444; color:#fff; border:none; border-radius:4px;">Copiar</button>
+          </div>
+
+          <div class="form-group" style="text-align:left;">
+            <label>Propina para el chofer:</label>
+            <div class="chips">
+              <div class="chip" onclick="setTip(0)">$0</div>
+              <div class="chip" onclick="setTip(200)">$200</div>
+              <div class="chip" onclick="setTip(500)">$500</div>
+              <div class="chip" onclick="setTip(1000)">$1000</div>
+            </div>
+          </div>
+
+          <div class="form-group" style="text-align:left;">
+            <label>Calificar Chofer:</label>
+            <div class="stars" style="text-align:center; margin:6px 0;">
+              ⭐⭐⭐⭐⭐
+            </div>
+            <div>
+              <span class="tag" onclick="this.classList.toggle('selected')">Amable</span>
+              <span class="tag" onclick="this.classList.toggle('selected')">Auto limpio</span>
+              <span class="tag" onclick="this.classList.toggle('selected')">Manejó bien</span>
+              <span class="tag" onclick="this.classList.toggle('selected')">Llegó rápido</span>
+              <span class="tag" onclick="this.classList.toggle('selected')">Música alta</span>
+            </div>
+          </div>
+
+          <button class="btn-main" onclick="finishOrderComplete()">CONCLUIR Y CERRAR</button>
+        </div>
+      `;
+    }
+
+    // INTERACCIONES
+    function addParada(val) {
+      paradasCount = Math.max(0, paradasCount + val);
+      renderSheet();
+    }
+
+    function searchDest(text) {
+      const sugg = document.getElementById('dest-suggestions');
+      if (!text) {
+        sugg.innerHTML = LUGARES.slice(0, 5).map(l => `<div class="chip" onclick='selectDestination(${JSON.stringify(l)})'>📍 ${l.name}</div>`).join('');
+        return;
+      }
+      const matches = LUGARES.filter(l => l.name.toLowerCase().includes(text.toLowerCase()));
+      sugg.innerHTML = matches.map(l => `<div class="chip" onclick='selectDestination(${JSON.stringify(l)})'>📍 ${l.name}</div>`).join('');
+    }
+
+    function selectDestination(place) {
+      selectedDest = place;
+      renderSheet();
+      map.setView([place.lat, place.lng], 15);
+    }
+
+    function toggleForOther(checked) {
+      document.getElementById('other-info').style.display = checked ? 'block' : 'none';
+    }
+
+    function submitOrder() {
+      if (!selectedDest) {
+        alert('Por favor elegí un destino de la lista o escribe una dirección de Tres Arroyos');
+        return;
+      }
+
+      let distKm = Math.max(0.5, Math.round(getDistanceKm(userPos[0], userPos[1], selectedDest.lat, selectedDest.lng) * 10) / 10);
+      let fare = calculateFare(distKm, paradasCount, selectedDest.name);
+
+      const newOrder = {
+        id: 'ORD_' + Date.now(),
+        originPos: userPos,
+        originName: 'Ubicación GPS',
+        destPos: [selectedDest.lat, selectedDest.lng],
+        destName: selectedDest.name,
+        estimatedFare: fare.total,
+        distKm: distKm,
+        paradas: paradasCount,
+        payment: document.getElementById('select-pago').value,
+        autoType: document.getElementById('select-auto').value,
+        when: document.getElementById('select-when').value,
+        note: document.getElementById('order-note').value,
+        forOther: document.getElementById('for-other').checked,
+        otherName: document.getElementById('other-name')?.value || '',
+        status: 'BUSCANDO',
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem('remis3a_active_order', JSON.stringify(newOrder));
+      
+      // MOCK SYNC CON APP CHOFER EN LOCALSTORAGE
+      let pendingList = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
+      pendingList.push(newOrder);
+      localStorage.setItem('remis3a_pending_orders', JSON.stringify(pendingList));
+
+      checkActiveOrder();
+      renderSheet();
+
+      // SIMULACIÓN DE RESPUESTA DE CHOFER TRAS 5 SEG SI NO HAY APP CHOFER ABIERTA
+      setTimeout(() => {
+        let curr = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+        if (curr && curr.status === 'BUSCANDO') {
+          curr.status = 'ASIGNADO';
+          curr.driver = { name: 'Juan Pérez', photo: '👨', plate: 'AB 123 CD', model: 'Fiat Cronos Blanco', rating: '4.9' };
+          curr.driverPos = [userPos[0] + 0.003, userPos[1] + 0.003];
+          localStorage.setItem('remis3a_active_order', JSON.stringify(curr));
+          checkActiveOrder();
+          renderSheet();
         }
+      }, 5000);
+    }
 
-        function pedirUbicacionReal() {
-            if (!navigator.geolocation) {
-                alert("Geolocalización no soportada en tu navegador.");
-                return;
+    function cancelOrder(withPenalty) {
+      if (withPenalty) {
+        if (!confirm('El chofer ya aceptó y está en camino. Cancelar abonará un costo de $500. ¿Confirmar?')) return;
+      }
+      
+      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+      if (active) {
+        saveToHistory(active, 'CANCELADO');
+      }
+
+      localStorage.removeItem('remis3a_active_order');
+      checkActiveOrder();
+      renderSheet();
+    }
+
+    function quickChat(text) {
+      let order = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+      if (!order) return;
+      if (!order.chat) order.chat = [];
+      order.chat.push({ sender: 'user', text: text });
+      localStorage.setItem('remis3a_active_order', JSON.stringify(order));
+      renderSheet();
+    }
+
+    function sendChatMessage() {
+      let input = document.getElementById('chat-input');
+      if (input && input.value.trim()) {
+        quickChat(input.value.trim());
+        input.value = '';
+      }
+    }
+
+    function shareLiveTrip() {
+      if (navigator.share) {
+        navigator.share({ title: 'Mi Viaje en REMIS 3A', text: 'Sigue mi viaje en remis en vivo por Tres Arroyos', url: window.location.href });
+      } else {
+        alert('Enlace de viaje copiado al portapapeles');
+      }
+    }
+
+    function triggerSOS() {
+      alert('🚨 ALERTA SOS ENVIADA A LA BASE Y AL 911');
+      window.location.href = 'tel:911';
+    }
+
+    function triggerPanic() {
+      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || '{}');
+      let msg = `🚨 ALERTA PÁNICO REMIS 3A - Necesito ayuda. Estoy en un viaje en Tres Arroyos. Patente: ${active.driver?.plate || 'AB123CD'}`;
+      window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+
+    function togglePayDetails(val) {
+      document.getElementById('transfer-details').style.display = (val === 'Transferencia') ? 'block' : 'none';
+    }
+
+    function setTip(val) {
+      alert(`Propina de $${val} agregada.`);
+    }
+
+    function finishOrderComplete() {
+      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+      if (active) {
+        saveToHistory(active, 'COMPLETADO');
+      }
+      localStorage.removeItem('remis3a_active_order');
+      checkActiveOrder();
+      renderSheet();
+    }
+
+    function saveToHistory(order, status) {
+      let history = JSON.parse(localStorage.getItem('remis3a_history') || '[]');
+      order.finalStatus = status;
+      history.unshift(order);
+      if (history.length > 20) history.pop();
+      localStorage.setItem('remis3a_history', JSON.stringify(history));
+    }
+
+    function showHistory() {
+      let history = JSON.parse(localStorage.getItem('remis3a_history') || '[]');
+      let modal = document.getElementById('modal-container');
+      modal.style.display = 'flex';
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>📜 Historial de Viajes</h3>
+          <div style="max-height:300px; overflow-y:auto; margin:12px 0;">
+            ${history.length === 0 ? '<p style="color:var(--subtext);">No hay viajes guardados.</p>' : 
+              history.map(h => `
+                <div style="background:#222; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
+                  <strong>${h.destName}</strong> - $${h.estimatedFare}<br>
+                  <small>${new Date(h.timestamp).toLocaleDateString()}</small>
+                  <button onclick='repeatTrip(${JSON.stringify(h)})' style="float:right; background:var(--accent); color:#fff; border:none; padding:2px 6px; border-radius:4px;">REPETIR</button>
+                </div>
+              `).join('')
             }
+          </div>
+          <button class="btn-cancel" onclick="document.getElementById('modal-container').style.display='none'">CERRAR</button>
+        </div>
+      `;
+    }
 
-            document.getElementById('gps-error').style.display = 'none';
+    function repeatTrip(oldTrip) {
+      document.getElementById('modal-container').style.display = 'none';
+      selectedDest = { name: oldTrip.destName, lat: oldTrip.destPos[0], lng: oldTrip.destPos[1] };
+      renderSheet();
+    }
 
-            navigator.geolocation.getCurrentPosition(
-                (pos) => { handleUbicacionExito(pos); iniciarWatch(); },
-                (err) => { handleUbicacionError(err); },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-            );
-        }
+    function reportForgot() {
+      alert('Reporte enviado a la Base 2983-123456. Nos comunicaremos con el último chofer asignado.');
+    }
 
-        function iniciarWatch() {
-            if (watchPosId) navigator.geolocation.clearWatch(watchPosId);
-            watchPosId = navigator.geolocation.watchPosition(
-                (pos) => handleUbicacionExito(pos),
-                (err) => console.warn(err),
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-            );
-        }
-
-        function handleUbicacionExito(pos) {
-            origenLat = pos.coords.latitude;
-            origenLng = pos.coords.longitude;
-
-            document.getElementById('gps-box').style.display = 'none';
-            document.getElementById('gps-error').style.display = 'none';
-            document.getElementById('form-viaje').style.display = 'flex';
-
-            const userIcon = L.divIcon({ className: 'user-marker', iconSize: [20, 20], iconAnchor: [10, 10] });
-
-            if (!userMarker) {
-                userMarker = L.marker([origenLat, origenLng], { icon: userIcon, draggable: true }).addTo(map);
-                map.setView([origenLat, origenLng], 16);
-                
-                userMarker.on('dragend', (e) => {
-                    const coord = e.target.getLatLng();
-                    origenLat = coord.lat;
-                    origenLng = coord.lng;
-                    geocodificarInversa(origenLat, origenLng);
-                });
-            } else {
-                userMarker.setLatLng([origenLat, origenLng]);
-            }
-
-            map.invalidateSize();
-            geocodificarInversa(origenLat, origenLng);
-        }
-
-        function handleUbicacionError(err) {
-            document.getElementById('gps-box').style.display = 'none';
-            document.getElementById('gps-error').style.display = 'flex';
-        }
-
-        function geocodificarInversa(lat, lng) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data && data.address) {
-                        const road = data.address.road || data.address.pedestrian || 'Calle';
-                        const num = data.address.house_number ? ` ${data.address.house_number}` : '';
-                        const city = data.address.city || data.address.town || 'Tres Arroyos';
-                        document.getElementById('origen_texto').value = `${road}${num}, ${city}`;
-                    } else {
-                        document.getElementById('origen_texto').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Tres Arroyos`;
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('origen_texto').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Tres Arroyos`;
-                });
-        }
-
-        let timerAuto = null;
-        function buscarAutocomplete(q) {
-            clearTimeout(timerAuto);
-            const sugBox = document.getElementById('suggestions');
-            if (!q || q.length < 3) { sugBox.style.display = 'none'; return; }
-
-            timerAuto = setTimeout(() => {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Tres Arroyos')}&limit=4`)
-                    .then(r => r.json())
-                    .then(data => {
-                        sugBox.innerHTML = '';
-                        if (data.length > 0) {
-                            sugBox.style.display = 'block';
-                            data.forEach(item => {
-                                const div = document.createElement('div');
-                                div.className = 'suggestion-item';
-                                div.innerText = item.display_name;
-                                div.onclick = () => {
-                                    document.getElementById('destino_texto').value = item.display_name;
-                                    destinoLat = parseFloat(item.lat);
-                                    destinoLng = parseFloat(item.lon);
-                                    sugBox.style.display = 'none';
-                                };
-                                sugBox.appendChild(div);
-                            });
-                        } else {
-                            sugBox.style.display = 'none';
-                        }
-                    });
-            }, 400);
-        }
-
-        function recentrarMapa() {
-            if (origenLat && origenLng) {
-                map.flyTo([origenLat, origenLng], 16);
-            } else {
-                pedirUbicacionReal();
-            }
-        }
-
-        async function solicitarRemis() {
-            const origenTexto = document.getElementById('origen_texto').value;
-            const destinoTexto = document.getElementById('destino_texto').value;
-
-            if (!origenLat || !origenLng || !origenTexto) {
-                alert("Primero activá tu ubicación.");
-                return;
-            }
-            if (!destinoTexto) {
-                alert("Ingresá un destino.");
-                return;
-            }
-
-            document.getElementById('form-viaje').style.display = 'none';
-            document.getElementById('status-buscando').style.display = 'block';
-
-            const payload = {
-                origen_texto: origenTexto,
-                origen_lat: origenLat,
-                origen_lng: origenLng,
-                destino_texto: destinoTexto,
-                destino_lat: destinoLat || origenLat + 0.01,
-                destino_lng: destinoLng || origenLng + 0.01,
-                estado: 'pendiente',
-                created_at: new Date().toISOString()
-            };
-
-            const { data, error } = await supabaseClient.from('viajes').insert([payload]).select();
-
-            if (error) {
-                alert("Error al solicitar viaje: " + error.message);
-                document.getElementById('status-buscando').style.display = 'none';
-                document.getElementById('form-viaje').style.display = 'flex';
-                return;
-            }
-
-            if (data && data.length > 0) {
-                viajeIdActual = data[0].id;
-                escucharEstadoViaje(viajeIdActual);
-            }
-        }
-
-        function escucharEstadoViaje(id) {
-            supabaseClient
-                .channel('viaje-' + id)
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'viajes', filter: `id=eq.${id}` }, (payload) => {
-                    const viaje = payload.new;
-                    if (viaje.estado === 'aceptado') {
-                        document.getElementById('status-buscando').style.display = 'none';
-                        document.getElementById('status-chofer').style.display = 'flex';
-                        document.getElementById('driver-info').innerText = `Chofer: Patente ${viaje.chofer_patente}`;
-                        escucharUbicacionChofer(viaje.chofer_patente);
-                    }
-                })
-                .subscribe();
-        }
-
-        function escucharUbicacionChofer(patente) {
-            const driverIcon = L.divIcon({ className: 'driver-marker', html: '🚖', iconSize: [28, 28], iconAnchor: [14, 14] });
-
-            supabaseClient
-                .channel('chofer-' + patente)
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'choferes', filter: `patente=eq.${patente}` }, (payload) => {
-                    const chofer = payload.new;
-                    if (chofer && chofer.lat && chofer.lng) {
-                        if (!driverMarker) {
-                            driverMarker = L.marker([chofer.lat, chofer.lng], { icon: driverIcon }).addTo(map);
-                        } else {
-                            driverMarker.setLatLng([chofer.lat, chofer.lng]);
-                        }
-                    }
-                })
-                .subscribe();
-        }
-    </script>
+    function claimBase() {
+      window.location.href = 'tel:2983123456';
+    }
+  </script>
 </body>
 </html>
