@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remis Neco - Pasajero</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #FFC300;
+            --primary-dark: #e0ab00;
+            --bg: #0d0d0d;
+            --card: #18181b;
+            --card-border: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        header {
+            background: var(--card); padding: 14px 18px; border-bottom: 1px solid var(--card-border);
+            display: flex; justify-content: space-between; align-items: center; z-index: 1000;
+        }
+        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .badge { background: rgba(255, 195, 0, 0.15); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+        #map-container { position: relative; flex: 1; width: 100%; }
+        #map { width: 100%; height: 100%; }
+
+        .btn-recenter {
+            position: absolute; bottom: 16px; right: 16px; z-index: 500;
+            background: var(--card); color: var(--text); border: 1px solid var(--card-border);
+            padding: 10px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+
+        .panel {
+            background: var(--card); border-radius: 20px 20px 0 0; padding: 20px;
+            display: flex; flex-direction: column; gap: 14px; z-index: 1000;
+            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); max-height: 55vh; overflow-y: auto;
+        }
+
+        .btn-main {
+            background: var(--primary); color: #000; border: none; padding: 16px;
+            border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer;
+            width: 100%; text-transform: uppercase; letter-spacing: 0.5px;
+            transition: transform 0.1s;
+        }
+        .btn-main:disabled { background: #27272a; color: #71717a; cursor: not-allowed; }
+        .btn-main:active:not(:disabled) { transform: scale(0.98); }
+
+        .gps-alert {
+            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5;
+            padding: 14px; border-radius: 12px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+        label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+        input {
+            width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--card-border);
+            background: #09090b; color: white; font-size: 0.95rem; outline: none;
+        }
+        input:focus { border-color: var(--primary); }
+
+        .suggestions {
+            position: absolute; top: 100%; left: 0; right: 0; background: #18181b;
+            border: 1px solid var(--card-border); border-radius: 0 0 10px 10px;
+            max-height: 150px; overflow-y: auto; z-index: 2000;
+        }
+        .suggestion-item { padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid #27272a; cursor: pointer; }
+        .suggestion-item:hover { background: #27272a; }
+
+        .status-box {
+            background: rgba(255, 195, 0, 0.1); border: 1px solid var(--primary);
+            padding: 16px; border-radius: 12px; text-align: center;
+        }
+        .pulse-loader {
+            display: inline-block; width: 12px; height: 12px; background: var(--primary);
+            border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
+
+        .driver-card {
+            background: #09090b; border: 1px solid var(--success); border-radius: 12px;
+            padding: 14px; display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .user-marker {
+            width: 20px; height: 20px; background: #38bdf8; border: 3px solid #fff;
+            border-radius: 50%; box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+        }
+        .driver-marker {
+            width: 28px; height: 28px; background: var(--primary); border: 2px solid #000;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
+            box-shadow: 0 0 10px rgba(255, 195, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">🚖 REMIS NECO</div>
+        <div class="badge">PASAJERO</div>
+    </header>
+
+    <div id="map-container">
+        <div id="map"></div>
+        <button class="btn-recenter" onclick="recentrarMapa()">🎯 Mi ubicación</button>
+    </div>
+
+    <div class="panel">
+        <div id="gps-box">
+            <button class="btn-main" style="background:#38bdf8; color:#000;" onclick="pedirUbicacionReal()">📍 Activar ubicación</button>
+        </div>
+
+        <div id="gps-error" class="gps-alert" style="display:none;">
+            <div><strong>⚠️ Bloqueaste la ubicación.</strong></div>
+            <div>Andá a Chrome > 3 puntitos > Configuración del sitio > Ubicación > Permitir, cerrá Chrome y volvé a entrar.</div>
+            <button class="btn-main" style="background:var(--danger); color:white; margin-top:6px;" onclick="pedirUbicacionReal()">Volver a pedir permiso</button>
+        </div>
+
+        <div id="form-viaje" style="display:none; flex-direction:column; gap:12px;">
+            <div class="form-group">
+                <label>Origen (Tu posición real)</label>
+                <input type="text" id="origen_texto" placeholder="Obteniendo dirección..." readonly style="background:#27272a;">
+            </div>
+
+            <div class="form-group">
+                <label>Destino</label>
+                <input type="text" id="destino_texto" placeholder="Ej: Avenida Moreno 500, Tres Arroyos" oninput="buscarAutocomplete(this.value)">
+                <div class="suggestions" id="suggestions" style="display:none;"></div>
+            </div>
+
+            <button class="btn-main" id="btn-pedir" onclick="solicitarRemis()">Pedir Remis Ahora</button>
+        </div>
+
+        <div id="status-buscando" class="status-box" style="display:none;">
+            <div><span class="pulse-loader"></span><strong style="color:var(--primary);">Buscando chofer cercano...</strong></div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Tu viaje fue cargado. Un chofer aceptará en breve.</div>
+        </div>
+
+        <div id="status-chofer" class="driver-card" style="display:none;">
+            <div style="color:var(--success); font-weight:800; font-size:0.9rem;">✅ ¡TU CHOFER VIENE EN CAMINO!</div>
+            <div id="driver-info" style="font-weight:700; font-size:1.05rem;">-</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Podés ver el recorrido en tiempo real en el mapa.</div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "PONÉ ACÁ TU URL";
+        const SUPABASE_KEY = "PONÉ ACÁ TU KEY";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let map, userMarker, driverMarker;
+        let origenLat = null, origenLng = null;
+        let destinoLat = null, destinoLng = null;
+        let viajeIdActual = null;
+        let watchPosId = null;
+
+        window.addEventListener('load', () => {
+            initMap();
+        });
+
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([-38.3764, -60.2721], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+
+        function pedirUbicacionReal() {
+            if (!navigator.geolocation) {
+                alert("Geolocalización no soportada en tu navegador.");
+                return;
+            }
+
+            document.getElementById('gps-error').style.display = 'none';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { handleUbicacionExito(pos); iniciarWatch(); },
+                (err) => { handleUbicacionError(err); },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+            );
+        }
+
+        function iniciarWatch() {
+            if (watchPosId) navigator.geolocation.clearWatch(watchPosId);
+            watchPosId = navigator.geolocation.watchPosition(
+                (pos) => handleUbicacionExito(pos),
+                (err) => console.warn(err),
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+            );
+        }
+
+        function handleUbicacionExito(pos) {
+            origenLat = pos.coords.latitude;
+            origenLng = pos.coords.longitude;
+
+            document.getElementById('gps-box').style.display = 'none';
+            document.getElementById('gps-error').style.display = 'none';
+            document.getElementById('form-viaje').style.display = 'flex';
+
+            const userIcon = L.divIcon({ className: 'user-marker', iconSize: [20, 20], iconAnchor: [10, 10] });
+
+            if (!userMarker) {
+                userMarker = L.marker([origenLat, origenLng], { icon: userIcon, draggable: true }).addTo(map);
+                map.setView([origenLat, origenLng], 16);
+                
+                userMarker.on('dragend', (e) => {
+                    const coord = e.target.getLatLng();
+                    origenLat = coord.lat;
+                    origenLng = coord.lng;
+                    geocodificarInversa(origenLat, origenLng);
+                });
+            } else {
+                userMarker.setLatLng([origenLat, origenLng]);
+            }
+
+            geocodificarInversa(origenLat, origenLng);
+        }
+
+        function handleUbicacionError(err) {
+            document.getElementById('gps-box').style.display = 'none';
+            document.getElementById('gps-error').style.display = 'flex';
+        }
+
+        function geocodificarInversa(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.address) {
+                        const road = data.address.road || data.address.pedestrian || 'Calle';
+                        const num = data.address.house_number ? ` ${data.address.house_number}` : '';
+                        const city = data.address.city || data.address.town || 'Tres Arroyos';
+                        document.getElementById('origen_texto').value = `${road}${num}, ${city}`;
+                    } else {
+                        document.getElementById('origen_texto').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Tres Arroyos`;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('origen_texto').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Tres Arroyos`;
+                });
+        }
+
+        let timerAuto = null;
+        function buscarAutocomplete(q) {
+            clearTimeout(timerAuto);
+            const sugBox = document.getElementById('suggestions');
+            if (!q || q.length < 3) { sugBox.style.display = 'none'; return; }
+
+            timerAuto = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Tres Arroyos')}&limit=4`)
+                    .then(r => r.json())
+                    .then(data => {
+                        sugBox.innerHTML = '';
+                        if (data.length > 0) {
+                            sugBox.style.display = 'block';
+                            data.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'suggestion-item';
+                                div.innerText = item.display_name;
+                                div.onclick = () => {
+                                    document.getElementById('destino_texto').value = item.display_name;
+                                    destinoLat = parseFloat(item.lat);
+                                    destinoLng = parseFloat(item.lon);
+                                    sugBox.style.display = 'none';
+                                };
+                                sugBox.appendChild(div);
+                            });
+                        } else {
+                            sugBox.style.display = 'none';
+                        }
+                    });
+            }, 400);
+        }
+
+        function recentrarMapa() {
+            if (origenLat && origenLng) {
+                map.flyTo([origenLat, origenLng], 16);
+            } else {
+                pedirUbicacionReal();
+            }
+        }
+
+        async function solicitarRemis() {
+            const origenTexto = document.getElementById('origen_texto').value;
+            const destinoTexto = document.getElementById('destino_texto').value;
+
+            if (!origenLat || !origenLng || !origenTexto) {
+                alert("Primero activá tu ubicación.");
+                return;
+            }
+            if (!destinoTexto) {
+                alert("Ingresá un destino.");
+                return;
+            }
+
+            document.getElementById('form-viaje').style.display = 'none';
+            document.getElementById('status-buscando').style.display = 'block';
+
+            const payload = {
+                origen_texto: origenTexto,
+                origen_lat: origenLat,
+                origen_lng: origenLng,
+                destino_texto: destinoTexto,
+                destino_lat: destinoLat || origenLat + 0.01,
+                destino_lng: destinoLng || origenLng + 0.01,
+                estado: 'pendiente',
+                created_at: new Date().toISOString()
+            };
+
+            const { data, error } = await supabaseClient.from('viajes').insert([payload]).select();
+
+            if (error) {
+                alert("Error al solicitar viaje: " + error.message);
+                document.getElementById('status-buscando').style.display = 'none';
+                document.getElementById('form-viaje').style.display = 'flex';
+                return;
+            }
+
+            if (data && data.length > 0) {
+                viajeIdActual = data[0].id;
+                escucharEstadoViaje(viajeIdActual);
+            }
+        }
+
+        function escucharEstadoViaje(id) {
+            supabaseClient
+                .channel('viaje-' + id)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'viajes', filter: `id=eq.${id}` }, (payload) => {
+                    const viaje = payload.new;
+                    if (viaje.estado === 'aceptado') {
+                        document.getElementById('status-buscando').style.display = 'none';
+                        document.getElementById('status-chofer').style.display = 'flex';
+                        document.getElementById('driver-info').innerText = `Chofer: Patente ${viaje.chofer_patente}`;
+                        escucharUbicacionChofer(viaje.chofer_patente);
+                    }
+                })
+                .subscribe();
+        }
+
+        function escucharUbicacionChofer(patente) {
+            const driverIcon = L.divIcon({ className: 'driver-marker', html: '🚖', iconSize: [28, 28], iconAnchor: [14, 14] });
+
+            supabaseClient
+                .channel('chofer-' + patente)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'choferes', filter: `patente=eq.${patente}` }, (payload) => {
+                    const chofer = payload.new;
+                    if (chofer && chofer.lat && chofer.lng) {
+                        if (!driverMarker) {
+                            driverMarker = L.marker([chofer.lat, chofer.lng], { icon: driverIcon }).addTo(map);
+                        } else {
+                            driverMarker.setLatLng([chofer.lat, chofer.lng]);
+                        }
+                    }
+                })
+                .subscribe();
+        }
+    </script>
+</body>
+</html>
