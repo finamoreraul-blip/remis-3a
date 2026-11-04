@@ -9,80 +9,84 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
-      --bg: #121212;
-      --card: #1e1e1e;
-      --accent: #2196f3;
-      --accent-green: #4caf50;
-      --accent-red: #f44336;
-      --text: #ffffff;
-      --subtext: #aaaaaa;
-      --border: #333333;
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --accent: #00c853;
+      --accent-yellow: #ffc107;
+      --text: #212529;
+      --subtext: #6c757d;
+      --border: #e9ecef;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { height: 60px; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 1000; border-bottom: 1px solid var(--border); }
-    header h1 { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
-    .btn-header { height: 42px; padding: 0 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; }
-    .btn-sos { background: var(--accent-red); }
-    .btn-base { background: #333; }
+    html, body { overflow-y: auto !important; height: auto !important; background: var(--bg); color: var(--text); }
     
-    #map-container { flex: 1; position: relative; width: 100%; height: 100%; }
+    header { height: 60px; background: linear-gradient(135deg, #00c853 0%, #ffc107 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.25rem; font-weight: 900; color: #000; letter-spacing: 0.5px; }
+    .btn-header { height: 40px; padding: 0 12px; border-radius: 8px; border: none; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .btn-sos { background: #d32f2f; }
+    .btn-base { background: #212529; }
+    
+    #map-container { width: 100%; height: 40vh; position: relative; min-height: 250px; }
     #map { width: 100%; height: 100%; }
-    .btn-locate { position: absolute; top: 12px; right: 12px; z-index: 999; background: #000; color: #fff; border: 1px solid var(--border); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+    .btn-locate { position: absolute; top: 16px; right: 16px; z-index: 999; background: #fff; color: #333; border: 1px solid var(--border); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; }
     
-    .sheet { background: var(--card); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 16px; border-top: 1px solid var(--border); max-height: 65vh; overflow-y: auto; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); }
-    .form-group { margin-bottom: 12px; }
-    label { font-size: 0.75rem; color: var(--subtext); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; }
-    input, select { width: 100%; height: 48px; background: #2a2a2a; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 0 12px; font-size: 0.95rem; outline: none; }
-    input:focus, select:focus { border-color: var(--accent); }
+    .sheet { background: var(--card); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px 16px 100px 16px; margin-top: -20px; position: relative; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); border-top: 1px solid var(--border); }
     
-    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 6px; }
-    .chip { background: #2a2a2a; border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .chip:active { background: #333; }
+    .form-group { margin-bottom: 14px; }
+    label { font-size: 0.75rem; color: var(--subtext); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+    input, select { width: 100%; height: 50px; background: #fdfdfd; border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); padding: 0 14px; font-size: 1rem; outline: none; font-weight: 500; transition: all 0.2s; }
+    input:focus, select:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(0,200,83,0.1); }
+    
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-top: 6px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { background: #f1f3f5; border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #495057; transition: all 0.2s; }
+    .chip:active, .chip.selected { background: #e8f5e9; border-color: var(--accent); color: #2e7d32; }
 
-    .btn-main { width: 100%; height: 60px; background: var(--accent-green); color: #fff; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 8px; box-shadow: 0 4px 15px rgba(76,175,80,0.4); }
+    .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 12px 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1100; border-top: 1px solid var(--border); }
+    .btn-main { width: 100%; height: 60px; background: var(--accent); color: #000; border: none; border-radius: 14px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,200,83,0.3); letter-spacing: 0.5px; }
     .btn-main:active { transform: scale(0.98); }
-    .btn-cancel { background: var(--accent-red); margin-top: 8px; width: 100%; height: 50px; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: #d32f2f; margin-top: 8px; width: 100%; height: 50px; border: none; border-radius: 10px; color: #fff; font-weight: 800; cursor: pointer; }
 
-    .fare-box { background: #141414; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin: 10px 0; font-size: 0.85rem; text-align: center; }
-    .fare-box strong { font-size: 1.1rem; color: var(--accent-green); display: block; margin-bottom: 4px; }
+    .fare-box { background: #f1f8e9; padding: 14px; border-radius: 12px; border: 1.5px solid #c8e6c9; margin: 12px 0; font-size: 0.9rem; text-align: center; color: #2e7d32; }
+    .fare-box strong { font-size: 1.2rem; display: block; margin-bottom: 4px; color: #1b5e20; }
     
-    .status-banner { background: #1565c0; color: #fff; padding: 12px; text-align: center; font-weight: bold; border-radius: 8px; margin-bottom: 12px; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+    .status-banner { background: #e3f2fd; color: #0d47a1; padding: 14px; text-align: center; font-weight: 800; border-radius: 12px; margin-bottom: 14px; border: 1.5px solid #bbdefb; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
 
-    .driver-card { background: #252525; padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
-    .driver-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .driver-avatar { width: 50px; height: 50px; border-radius: 50%; background: #444; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
-    .driver-info h3 { font-size: 1rem; margin-bottom: 2px; }
-    .driver-info p { font-size: 0.8rem; color: var(--subtext); }
+    .driver-card { background: #fff; padding: 16px; border-radius: 14px; border: 1.5px solid var(--border); margin-bottom: 14px; box-shadow: var(--shadow); }
+    .driver-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .driver-avatar { width: 56px; height: 56px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .driver-info h3 { font-size: 1.05rem; margin-bottom: 2px; color: var(--text); font-weight: 800; }
+    .driver-info p { font-size: 0.85rem; color: var(--subtext); font-weight: 500; }
 
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .btn-action { height: 48px; background: #333; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .btn-action { height: 50px; background: #f8f9fa; border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
     
-    .chat-box { height: 120px; background: #141414; border: 1px solid var(--border); border-radius: 8px; overflow-y: auto; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .msg { padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; max-width: 80%; }
-    .msg.in { background: #2a2a2a; align-self: flex-start; }
-    .msg.out { background: #1565c0; align-self: flex-end; }
+    .chat-box { height: 140px; background: #f8f9fa; border: 1.5px solid var(--border); border-radius: 12px; overflow-y: auto; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; max-width: 80%; font-weight: 500; }
+    .msg.in { background: #e9ecef; align-self: flex-start; color: var(--text); }
+    .msg.out { background: #e8f5e9; align-self: flex-end; color: #1b5e20; border: 1px solid #c8e6c9; }
 
-    .disabled-overlay { position: relative; opacity: 0.6; pointer-events: none; }
-    .lock-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+    .disabled-overlay { position: relative; opacity: 0.7; pointer-events: none; }
+    .lock-badge { background: #d32f2f; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 6px; display: inline-block; margin-bottom: 12px; letter-spacing: 0.5px; }
 
-    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: var(--card); width: 100%; max-width: 400px; border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+    .modal-content { background: var(--card); width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
 
-    .pulsing-dot { width: 14px; height: 14px; background: #2196f3; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 rgba(33, 150, 243, 0.4); animation: pulse-dot 1.5s infinite; }
-    @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(33, 150, 243, 0); } 100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); } }
+    .pulsing-dot { width: 16px; height: 16px; background: #00c853; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 rgba(0, 200, 83, 0.4); animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 200, 83, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0); } }
 
-    .stars { color: #fbc02d; font-size: 1.2rem; cursor: pointer; }
-    .tag { display: inline-block; background: #2a2a2a; border: 1px solid var(--border); padding: 6px 10px; border-radius: 12px; font-size: 0.75rem; margin: 2px; cursor: pointer; }
-    .tag.selected { background: var(--accent); border-color: var(--accent); }
+    .stars { color: #fbc02d; font-size: 1.4rem; cursor: pointer; letter-spacing: 4px; text-align: center; margin: 8px 0; }
+    .tag { display: inline-block; background: #f1f3f5; border: 1.5px solid var(--border); padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; margin: 3px; cursor: pointer; font-weight: 600; color: #495057; }
+    .tag.selected { background: #e8f5e9; border-color: var(--accent); color: #2e7d32; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>REMIS 3A</h1>
-    <div style="display: flex; gap: 6px;">
+    <div style="display: flex; gap: 8px;">
       <button class="btn-header btn-sos" onclick="triggerSOS()">🚨 SOS</button>
       <button class="btn-header btn-base" onclick="window.location.href='tel:2983123456'">📞 Base</button>
     </div>
@@ -94,20 +98,17 @@
   </div>
 
   <div class="sheet" id="main-sheet">
-    <!-- UI SE GENERARÁ DINÁMICAMENTE SEGÚN ESTADO -->
+    <!-- UI DINÁMICA -->
   </div>
 
-  <!-- MODAL HISTORIAL / BOTONES EXTRA -->
   <div id="modal-container" style="display: none;"></div>
 
   <script>
-    // CONSTANTES Y CONFIGURACIÓN
     const TRES_ARROYOS = [-38.375, -60.273];
     const BAJADA = 1500;
     const POR_KM = 300;
     const MINIMO = 2000;
     const EXTRA_PARADA = 500;
-    const CANCELACION_CHOFER = 500;
 
     const DESTINOS_FIJOS = {
       'Claromecó': 15000,
@@ -123,27 +124,20 @@
       { name: "Municipalidad", lat: -38.375, lng: -60.274 },
       { name: "Escuela 1", lat: -38.374, lng: -60.272 },
       { name: "Club Huracán", lat: -38.380, lng: -60.265 },
-      { name: "Casino Claromecó (Ref)", lat: -38.855, lng: -60.075 },
-      { name: "Moreno 200", lat: -38.375, lng: -60.271 },
+      { name: "Moreno 450", lat: -38.375, lng: -60.271 },
       { name: "Rivadavia 500", lat: -38.372, lng: -60.275 },
       { name: "San Martín 100", lat: -38.376, lng: -60.273 },
       { name: "Libertad 400", lat: -38.371, lng: -60.270 },
-      { name: "9 de Julio 300", lat: -38.377, lng: -60.276 },
-      { name: "Sarmiento 150", lat: -38.373, lng: -60.272 },
-      { name: "Av. del Trabajador 800", lat: -38.365, lng: -60.280 },
-      { name: "Av. Ituzaingó 600", lat: -38.382, lng: -60.268 }
+      { name: "9 de Julio 300", lat: -38.377, lng: -60.276 }
     ];
 
-    // ESTADO
     let map, userMarker, driverMarker, routePolyline;
     let userPos = TRES_ARROYOS;
     let selectedDest = null;
     let paradasCount = 0;
-    let orderState = null; // null, 'BUSCANDO', 'ASIGNADO', 'EN_VIAJE', 'FINALIZADO'
+    let orderState = null;
     let driverPos = null;
-    let mockDriverSim = null;
 
-    // INICIALIZACIÓN
     window.onload = () => {
       initMap();
       checkActiveOrder();
@@ -153,16 +147,11 @@
 
     function initMap() {
       map = L.map('map', { zoomControl: false }).setView(TRES_ARROYOS, 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-      // Icono Usuario
-      const userIcon = L.divIcon({ className: 'pulsing-dot', iconSize: [14, 14], iconAnchor: [7, 7] });
+      const userIcon = L.divIcon({ className: 'pulsing-dot', iconSize: [16, 16], iconAnchor: [8, 8] });
       userMarker = L.marker(TRES_ARROYOS, { icon: userIcon }).addTo(map);
 
-      // GPS Real
       if (navigator.geolocation) {
         navigator.geolocation.watchPosition(pos => {
           userPos = [pos.coords.latitude, pos.coords.longitude];
@@ -171,9 +160,7 @@
       }
     }
 
-    function centerMap() {
-      map.setView(userPos, 16);
-    }
+    function centerMap() { map.setView(userPos, 16); }
 
     function syncState() {
       checkActiveOrder();
@@ -196,7 +183,7 @@
     function updateMapMarkers(order) {
       if (order.driverPos) {
         if (!driverMarker) {
-          const carIcon = L.divIcon({ html: '🚗', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+          const carIcon = L.divIcon({ html: '🚗', className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
           driverMarker = L.marker(order.driverPos, { icon: carIcon }).addTo(map);
         } else {
           driverMarker.setLatLng(order.driverPos);
@@ -205,11 +192,10 @@
       if (order.destPos) {
         if (routePolyline) map.removeLayer(routePolyline);
         let start = order.status === 'EN_VIAJE' ? (order.driverPos || userPos) : userPos;
-        routePolyline = L.polyline([start, order.destPos], { color: '#2196f3', weight: 4, dashArray: '8, 8' }).addTo(map);
+        routePolyline = L.polyline([start, order.destPos], { color: '#00c853', weight: 5, dashArray: '8, 8' }).addTo(map);
       }
     }
 
-    // CÁLCULO DE TAFIRA
     function calculateFare(distKm, paradas = 0, destName = "") {
       for (let fijo in DESTINOS_FIJOS) {
         if (destName.toLowerCase().includes(fijo.toLowerCase())) {
@@ -218,7 +204,7 @@
       }
       let calc = BAJADA + (distKm * POR_KM) + (paradas * EXTRA_PARADA);
       let total = Math.max(calc, MINIMO);
-      return { total: Math.round(total), isFixed: false, calc: Math.round(calc) };
+      return { total: Math.round(total), isFixed: false };
     }
 
     function getDistanceKm(lat1, lon1, lat2, lon2) {
@@ -226,11 +212,9 @@
       let dLat = (lat2-lat1) * Math.PI / 180;
       let dLon = (lon2-lon1) * Math.PI / 180;
       let a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
-    // RENDERIZADO DE INTERFAZ
     function renderSheet() {
       const sheet = document.getElementById('main-sheet');
       const activeOrder = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
@@ -253,6 +237,7 @@
       let distKm = selectedDest ? getDistanceKm(userPos[0], userPos[1], selectedDest.lat, selectedDest.lng) : 3.2;
       distKm = Math.max(0.5, Math.round(distKm * 10) / 10);
       let fare = calculateFare(distKm, paradasCount, destName);
+      let whenVal = document.getElementById('select-when')?.value || 'AHORA';
 
       container.innerHTML = `
         <div class="form-group">
@@ -263,7 +248,7 @@
         <div class="form-group">
           <label>🏁 Destino</label>
           <input type="text" id="dest-input" placeholder="Buscar calle o lugar en Tres Arroyos..." value="${destName}" oninput="searchDest(this.value)" />
-          <div class="chips" id="dest-suggestions">
+          <div class="chips" id="dest-suggestions" style="margin-top:6px;">
             ${LUGARES.slice(0, 5).map(l => `<div class="chip" onclick='selectDestination(${JSON.stringify(l)})'>📍 ${l.name}</div>`).join('')}
           </div>
         </div>
@@ -278,12 +263,12 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div class="form-group">
             <label>⏰ Cuándo</label>
-            <select id="select-when">
-              <option value="AHORA">AHORA</option>
-              <option value="RESERVA">RESERVAR</option>
+            <select id="select-when" onchange="toggleWhenOption(this.value)">
+              <option value="AHORA" ${whenVal==='AHORA'?'selected':''}>AHORA</option>
+              <option value="RESERVA" ${whenVal==='RESERVA'?'selected':''}>RESERVAR</option>
             </select>
           </div>
           <div class="form-group">
@@ -297,7 +282,24 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div id="reserva-options" style="display: ${whenVal==='RESERVA'?'block':'none'}; background: #e8f5e9; padding: 14px; border-radius: 12px; border: 1.5px solid #c8e6c9; margin-bottom: 14px;">
+          <label style="color:#2e7d32;">📅 Calendario</label>
+          <div class="chips" style="margin-bottom: 10px;">
+            <div class="chip selected" id="res-day-hoy" onclick="setResDay('HOY')">HOY</div>
+            <div class="chip" id="res-day-manana" onclick="setResDay('MAÑANA')">MAÑANA</div>
+          </div>
+          <label style="color:#2e7d32;">🕒 Hora</label>
+          <div class="chips" style="margin-bottom: 10px;">
+            <div class="chip" onclick="setResTime('18:00')">18:00</div>
+            <div class="chip selected" onclick="setResTime('18:30')">18:30</div>
+            <div class="chip" onclick="setResTime('19:00')">19:00</div>
+          </div>
+          <div id="reserva-summary-box" style="font-size:0.85rem; font-weight:700; color:#1b5e20; background:#fff; padding:10px; border-radius:8px; border:1px solid #c8e6c9; text-align:center;">
+            Vas a pedir un remis para el HOY a las 18:30 desde Mi Ubicación hasta ${destName || '[Elegir Destino]'}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div class="form-group">
             <label>💳 Pago</label>
             <select id="select-pago">
@@ -307,27 +309,18 @@
             </select>
           </div>
           <div class="form-group">
-            <label>🛑 Paradas Extras ($500)</label>
+            <label>🛑 Paradas ($500)</label>
             <div style="display:flex; gap:4px;">
-              <button style="flex:1; background:#2a2a2a; border:1px solid #333; color:#fff; border-radius:8px;" onclick="addParada(-1)">-</button>
-              <span style="line-height:48px; width:30px; text-align:center; font-weight:bold;">${paradasCount}</span>
-              <button style="flex:1; background:#2a2a2a; border:1px solid #333; color:#fff; border-radius:8px;" onclick="addParada(1)">+</button>
+              <button style="flex:1; background:#f1f3f5; border:1.5px solid var(--border); color:#333; border-radius:10px; font-weight:bold;" onclick="addParada(-1)">-</button>
+              <span style="line-height:46px; width:30px; text-align:center; font-weight:800;">${paradasCount}</span>
+              <button style="flex:1; background:#f1f3f5; border:1.5px solid var(--border); color:#333; border-radius:10px; font-weight:bold;" onclick="addParada(1)">+</button>
             </div>
           </div>
         </div>
 
         <div class="form-group">
           <label>📝 Nota al Chofer</label>
-          <input type="text" id="order-note" placeholder="Ej: 2 valijas, voy con perro, necesito ayuda..." />
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="for-other" style="width:20px; height:20px;" onchange="toggleForOther(this.checked)">
-          <label for="for-other" style="margin:0; text-transform:none; font-size:0.9rem;">Pedir viaje para otra persona</label>
-        </div>
-        <div id="other-info" style="display:none;" class="form-group">
-          <input type="text" id="other-name" placeholder="Nombre de la persona" style="margin-bottom:4px;" />
-          <input type="tel" id="other-phone" placeholder="Teléfono de la persona" />
+          <input type="text" id="order-note" placeholder="Ej: 2 valijas, voy con perro..." />
         </div>
 
         <div class="fare-box">
@@ -337,14 +330,43 @@
           }
         </div>
 
-        <button class="btn-main" onclick="submitOrder()">PEDIR REMIS</button>
-        
-        <div style="display:flex; gap:8px; margin-top:12px;">
+        <div class="sticky-footer">
+          <button class="btn-main" onclick="submitOrder()">PEDIR REMIS</button>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:14px;">
           <button class="btn-action" style="flex:1;" onclick="showHistory()">📜 Historial</button>
           <button class="btn-action" style="flex:1;" onclick="reportForgot()">🎒 Olvidé Algo</button>
           <button class="btn-action" style="flex:1;" onclick="claimBase()">⚠️ Reclamar</button>
         </div>
       `;
+    }
+
+    let currentResDay = 'HOY';
+    let currentResTime = '18:30';
+
+    function toggleWhenOption(val) {
+      document.getElementById('reserva-options').style.display = (val === 'RESERVA') ? 'block' : 'none';
+    }
+
+    function setResDay(day) {
+      currentResDay = day;
+      document.getElementById('res-day-hoy').className = day === 'HOY' ? 'chip selected' : 'chip';
+      document.getElementById('res-day-manana').className = day === 'MAÑANA' ? 'chip selected' : 'chip';
+      updateResSummary();
+    }
+
+    function setResTime(time) {
+      currentResTime = time;
+      updateResSummary();
+    }
+
+    function updateResSummary() {
+      let destName = selectedDest ? selectedDest.name : '[Elegir Destino]';
+      let box = document.getElementById('reserva-summary-box');
+      if (box) {
+        box.innerText = `Vas a pedir un remis para el ${currentResDay} a las ${currentResTime} desde Mi Ubicación hasta ${destName}`;
+      }
     }
 
     function renderBuscandoUI(container, order) {
@@ -361,15 +383,14 @@
           <strong>Destino:</strong> ${order.destName}<br>
           <strong>Estimado:</strong> $${order.estimatedFare}
         </div>
-        <p style="text-align:center; font-size:0.8rem; color:var(--subtext); margin-bottom:8px;">Si no hay autos disponibles quedarás en cola automáticamente.</p>
         <button class="btn-cancel" onclick="cancelOrder(false)">CANCELAR PEDIDO (GRATIS)</button>
       `;
     }
 
     function renderAsignadoUI(container, order) {
-      const driver = order.driver || { name: 'Juan Pérez', photo: '👨', plate: 'AB 123 CD', model: 'Fiat Cronos Blanco 2023', rating: '4.8 (234 viajes)' };
+      const driver = order.driver || { name: 'Juan Pérez', photo: '👨', plate: 'AB 123 CD', model: 'Fiat Cronos Blanco', rating: '4.9' };
       container.innerHTML = `
-        <div class="status-banner" style="background:#2e7d32;">
+        <div class="status-banner" style="background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9;">
           ✅ CHOFER ASIGNADO
         </div>
         <div class="driver-card">
@@ -381,7 +402,7 @@
               <p>Patente: <strong>${driver.plate}</strong></p>
             </div>
           </div>
-          <div style="background:#1a1a1a; padding:8px; border-radius:6px; font-weight:bold; text-align:center; color:var(--accent); font-size:0.9rem;">
+          <div style="background:#f8f9fa; padding:10px; border-radius:8px; font-weight:800; text-align:center; color:#2e7d32; font-size:0.95rem; border:1px solid var(--border);">
             LLEGA EN 4 MIN - A 6 CUADRAS
           </div>
         </div>
@@ -391,11 +412,11 @@
           ${(order.chat || []).map(m => `<div class="msg ${m.sender==='user'?'out':'in'}">${m.text}</div>`).join('')}
         </div>
 
-        <div style="display:flex; gap:4px; margin-bottom:8px;">
-          <input type="text" id="chat-input" placeholder="Enviar mensaje..." style="height:40px;" />
-          <button style="width:60px; background:var(--accent); border:none; border-radius:8px; color:#fff; font-weight:bold;" onclick="sendChatMessage()">Enviar</button>
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <input type="text" id="chat-input" placeholder="Enviar mensaje..." style="height:46px;" />
+          <button style="width:70px; background:var(--accent); border:none; border-radius:10px; color:#000; font-weight:900;" onclick="sendChatMessage()">Enviar</button>
         </div>
-        <div class="chips" style="margin-bottom:8px;">
+        <div class="chips" style="margin-bottom:10px;">
           <div class="chip" onclick="quickChat('Ya salgo')">"Ya salgo"</div>
           <div class="chip" onclick="quickChat('Estoy en la puerta')">"Estoy en la puerta"</div>
         </div>
@@ -404,7 +425,7 @@
           <button class="btn-action" onclick="window.location.href='tel:2983123456'">📞 Llamar</button>
           <button class="btn-action" onclick="window.location.href='https://wa.me/542983123456'">💬 WhatsApp</button>
         </div>
-        <button class="btn-action" style="width:100%; margin-top:6px;" onclick="shareLiveTrip()">🔗 Compartir Viaje en Vivo</button>
+        <button class="btn-action" style="width:100%; margin-top:8px;" onclick="shareLiveTrip()">🔗 Compartir Viaje en Vivo</button>
 
         <button class="btn-cancel" onclick="cancelOrder(true)">CANCELAR VIAJE (COBRO $500)</button>
       `;
@@ -412,22 +433,22 @@
 
     function renderEnViajeUI(container, order) {
       container.innerHTML = `
-        <div class="status-banner" style="background:#1565c0;">
+        <div class="status-banner" style="background:#e3f2fd; color:#1565c0; border-color:#bbdefb;">
           🚖 EN VIAJE A DESTINO
         </div>
 
-        <div style="background:#000; padding:16px; border-radius:12px; border:1px solid var(--border); text-align:center; margin-bottom:12px;">
-          <div style="font-size:0.8rem; color:var(--subtext);">TAXÍMETRO EN VIVO</div>
-          <div style="font-size:2.2rem; font-weight:900; color:var(--accent-green);">$${order.currentFare || order.estimatedFare}</div>
-          <div style="font-size:0.85rem; color:#fff;">${order.distKm || 3.2} KM | ${order.duration || '8 min'}</div>
+        <div style="background:#fff; padding:20px; border-radius:16px; border:1.5px solid var(--border); text-align:center; margin-bottom:14px; box-shadow: var(--shadow);">
+          <div style="font-size:0.8rem; color:var(--subtext); font-weight:800;">TAXÍMETRO EN VIVO</div>
+          <div style="font-size:2.6rem; font-weight:900; color:#00c853; margin:6px 0;">$${order.currentFare || order.estimatedFare}</div>
+          <div style="font-size:0.9rem; font-weight:700; color:var(--text);">${order.distKm || 3.2} KM | 8 min</div>
         </div>
 
-        <div class="action-grid" style="margin-bottom:8px;">
+        <div class="action-grid" style="margin-bottom:10px;">
           <button class="btn-action" onclick="changeDestPrompt()">📍 Cambiar Destino</button>
           <button class="btn-action" onclick="addParadaEnViaje()">🛑 Parada Extra (+$500)</button>
         </div>
 
-        <button class="btn-main" style="background:var(--accent-red); height:50px; font-size:1rem;" onclick="triggerPanic()">🚨 BOTÓN PÁNICO DE EMERGENCIA</button>
+        <button class="btn-main" style="background:#d32f2f; color:#fff; height:54px; font-size:1.05rem;" onclick="triggerPanic()">🚨 BOTÓN PÁNICO DE EMERGENCIA</button>
       `;
     }
 
@@ -435,14 +456,14 @@
       let fare = order.finalFare || order.estimatedFare;
       container.innerHTML = `
         <div style="text-align:center; padding:10px;">
-          <h2 style="color:var(--accent-green); margin-bottom:8px;">🏁 VIAJE FINALIZADO</h2>
-          <div style="background:#141414; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px; text-align:left;">
+          <h2 style="color:#00c853; margin-bottom:12px; font-weight:900;">🏁 VIAJE FINALIZADO</h2>
+          <div style="background:#fff; padding:16px; border-radius:14px; border:1.5px solid var(--border); margin-bottom:14px; text-align:left; box-shadow: var(--shadow);">
             <p><strong>Bajada de bandera:</strong> $${BAJADA}</p>
-            <p><strong>Distancia recorida:</strong> $${fare - BAJADA - (order.paradas*500)}</p>
+            <p><strong>Kilometraje:</strong> $${fare - BAJADA - (order.paradas*500)}</p>
             ${order.paradas ? `<p><strong>Paradas (${order.paradas}):</strong> $${order.paradas*500}</p>` : ''}
-            <hr style="border-color:#333; margin:8px 0;">
-            <p style="font-size:1.3rem; font-weight:bold; color:#fff;">TOTAL A PAGAR: $${fare}</p>
-            <p style="font-size:0.75rem; color:var(--subtext);">SIN recargo nocturno | SIN espera | SIN sorpresas</p>
+            <hr style="border-color:var(--border); margin:10px 0;">
+            <p style="font-size:1.4rem; font-weight:900; color:var(--text);">TOTAL: $${fare}</p>
+            <p style="font-size:0.75rem; color:var(--subtext); font-weight:600; margin-top:4px;">SIN recargo nocturno | SIN espera | SIN sorpresas</p>
           </div>
 
           <div class="form-group" style="text-align:left;">
@@ -454,9 +475,9 @@
             </select>
           </div>
 
-          <div id="transfer-details" style="display:none; background:#222; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.85rem;">
+          <div id="transfer-details" style="display:none; background:#f1f3f5; padding:12px; border-radius:10px; margin-bottom:12px; font-size:0.9rem; font-weight:600;">
             Alias MP: <strong>remis3a.mp</strong>
-            <button onclick="navigator.clipboard.writeText('remis3a.mp'); alert('Alias copiado!');" style="margin-left:8px; padding:2px 6px; background:#444; color:#fff; border:none; border-radius:4px;">Copiar</button>
+            <button onclick="navigator.clipboard.writeText('remis3a.mp'); alert('Alias copiado!');" style="margin-left:10px; padding:4px 10px; background:#212529; color:#fff; border:none; border-radius:6px; font-weight:bold;">Copiar</button>
           </div>
 
           <div class="form-group" style="text-align:left;">
@@ -471,15 +492,12 @@
 
           <div class="form-group" style="text-align:left;">
             <label>Calificar Chofer:</label>
-            <div class="stars" style="text-align:center; margin:6px 0;">
-              ⭐⭐⭐⭐⭐
-            </div>
-            <div>
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <div style="text-align:center;">
               <span class="tag" onclick="this.classList.toggle('selected')">Amable</span>
               <span class="tag" onclick="this.classList.toggle('selected')">Auto limpio</span>
               <span class="tag" onclick="this.classList.toggle('selected')">Manejó bien</span>
               <span class="tag" onclick="this.classList.toggle('selected')">Llegó rápido</span>
-              <span class="tag" onclick="this.classList.toggle('selected')">Música alta</span>
             </div>
           </div>
 
@@ -488,7 +506,6 @@
       `;
     }
 
-    // INTERACCIONES
     function addParada(val) {
       paradasCount = Math.max(0, paradasCount + val);
       renderSheet();
@@ -508,10 +525,7 @@
       selectedDest = place;
       renderSheet();
       map.setView([place.lat, place.lng], 15);
-    }
-
-    function toggleForOther(checked) {
-      document.getElementById('other-info').style.display = checked ? 'block' : 'none';
+      updateResSummary();
     }
 
     function submitOrder() {
@@ -520,13 +534,14 @@
         return;
       }
 
+      let isReserva = document.getElementById('select-when').value === 'RESERVA';
       let distKm = Math.max(0.5, Math.round(getDistanceKm(userPos[0], userPos[1], selectedDest.lat, selectedDest.lng) * 10) / 10);
       let fare = calculateFare(distKm, paradasCount, selectedDest.name);
 
       const newOrder = {
         id: 'ORD_' + Date.now(),
         originPos: userPos,
-        originName: 'Ubicación GPS',
+        originName: 'Mi Ubicación',
         destPos: [selectedDest.lat, selectedDest.lng],
         destName: selectedDest.name,
         estimatedFare: fare.total,
@@ -534,17 +549,23 @@
         paradas: paradasCount,
         payment: document.getElementById('select-pago').value,
         autoType: document.getElementById('select-auto').value,
-        when: document.getElementById('select-when').value,
+        when: isReserva ? `RESERVA ${currentResDay} ${currentResTime}` : 'AHORA',
         note: document.getElementById('order-note').value,
-        forOther: document.getElementById('for-other').checked,
-        otherName: document.getElementById('other-name')?.value || '',
-        status: 'BUSCANDO',
+        status: isReserva ? 'RESERVADO' : 'BUSCANDO',
         timestamp: new Date().toISOString()
       };
 
+      if (isReserva) {
+        let reservas = JSON.parse(localStorage.getItem('remis3a_reservas') || '[]');
+        reservas.push(newOrder);
+        localStorage.setItem('remis3a_reservas', JSON.stringify(reservas));
+        alert(`¡Reserva confirmada para el ${currentResDay} a las ${currentResTime}! Quedó agendada.`);
+        selectedDest = null;
+        renderSheet();
+        return;
+      }
+
       localStorage.setItem('remis3a_active_order', JSON.stringify(newOrder));
-      
-      // MOCK SYNC CON APP CHOFER EN LOCALSTORAGE
       let pendingList = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
       pendingList.push(newOrder);
       localStorage.setItem('remis3a_pending_orders', JSON.stringify(pendingList));
@@ -552,7 +573,6 @@
       checkActiveOrder();
       renderSheet();
 
-      // SIMULACIÓN DE RESPUESTA DE CHOFER TRAS 5 SEG SI NO HAY APP CHOFER ABIERTA
       setTimeout(() => {
         let curr = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
         if (curr && curr.status === 'BUSCANDO') {
@@ -567,15 +587,7 @@
     }
 
     function cancelOrder(withPenalty) {
-      if (withPenalty) {
-        if (!confirm('El chofer ya aceptó y está en camino. Cancelar abonará un costo de $500. ¿Confirmar?')) return;
-      }
-      
-      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
-      if (active) {
-        saveToHistory(active, 'CANCELADO');
-      }
-
+      if (withPenalty && !confirm('El chofer ya aceptó. Cancelar abonará un costo de $500. ¿Confirmar?')) return;
       localStorage.removeItem('remis3a_active_order');
       checkActiveOrder();
       renderSheet();
@@ -600,47 +612,32 @@
 
     function shareLiveTrip() {
       if (navigator.share) {
-        navigator.share({ title: 'Mi Viaje en REMIS 3A', text: 'Sigue mi viaje en remis en vivo por Tres Arroyos', url: window.location.href });
+        navigator.share({ title: 'Mi Viaje en REMIS 3A', text: 'Sigue mi viaje en remis en vivo', url: window.location.href });
       } else {
-        alert('Enlace de viaje copiado al portapapeles');
+        alert('Enlace de viaje copiado');
       }
     }
 
     function triggerSOS() {
-      alert('🚨 ALERTA SOS ENVIADA A LA BASE Y AL 911');
+      alert('🚨 ALERTA SOS ENVIADA A BASE Y 911');
       window.location.href = 'tel:911';
     }
 
     function triggerPanic() {
-      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || '{}');
-      let msg = `🚨 ALERTA PÁNICO REMIS 3A - Necesito ayuda. Estoy en un viaje en Tres Arroyos. Patente: ${active.driver?.plate || 'AB123CD'}`;
-      window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      let active = JSON.parse(localStorage.getItem('remis3a_active_order') || '{}');
+      window.location.href = `https://wa.me/?text=${encodeURIComponent('🚨 ALERTA PÁNICO REMIS 3A - Patente: ' + (active.driver?.plate || 'AB123CD'))}`;
     }
 
     function togglePayDetails(val) {
       document.getElementById('transfer-details').style.display = (val === 'Transferencia') ? 'block' : 'none';
     }
 
-    function setTip(val) {
-      alert(`Propina de $${val} agregada.`);
-    }
+    function setTip(val) { alert(`Propina de $${val} agregada.`); }
 
     function finishOrderComplete() {
-      const active = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
-      if (active) {
-        saveToHistory(active, 'COMPLETADO');
-      }
       localStorage.removeItem('remis3a_active_order');
       checkActiveOrder();
       renderSheet();
-    }
-
-    function saveToHistory(order, status) {
-      let history = JSON.parse(localStorage.getItem('remis3a_history') || '[]');
-      order.finalStatus = status;
-      history.unshift(order);
-      if (history.length > 20) history.pop();
-      localStorage.setItem('remis3a_history', JSON.stringify(history));
     }
 
     function showHistory() {
@@ -650,36 +647,18 @@
       modal.className = 'modal';
       modal.innerHTML = `
         <div class="modal-content">
-          <h3>📜 Historial de Viajes</h3>
-          <div style="max-height:300px; overflow-y:auto; margin:12px 0;">
+          <h3 style="margin-bottom:12px; font-weight:900;">📜 Historial de Viajes</h3>
+          <div style="max-height:280px; overflow-y:auto; margin-bottom:14px;">
             ${history.length === 0 ? '<p style="color:var(--subtext);">No hay viajes guardados.</p>' : 
-              history.map(h => `
-                <div style="background:#222; padding:8px; border-radius:6px; margin-bottom:6px; font-size:0.8rem;">
-                  <strong>${h.destName}</strong> - $${h.estimatedFare}<br>
-                  <small>${new Date(h.timestamp).toLocaleDateString()}</small>
-                  <button onclick='repeatTrip(${JSON.stringify(h)})' style="float:right; background:var(--accent); color:#fff; border:none; padding:2px 6px; border-radius:4px;">REPETIR</button>
-                </div>
-              `).join('')
-            }
+              history.map(h => `<div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:8px; font-size:0.85rem; border:1px solid var(--border);"><strong>${h.destName}</strong> - $${h.estimatedFare}</div>`).join('')}
           </div>
           <button class="btn-cancel" onclick="document.getElementById('modal-container').style.display='none'">CERRAR</button>
         </div>
       `;
     }
 
-    function repeatTrip(oldTrip) {
-      document.getElementById('modal-container').style.display = 'none';
-      selectedDest = { name: oldTrip.destName, lat: oldTrip.destPos[0], lng: oldTrip.destPos[1] };
-      renderSheet();
-    }
-
-    function reportForgot() {
-      alert('Reporte enviado a la Base 2983-123456. Nos comunicaremos con el último chofer asignado.');
-    }
-
-    function claimBase() {
-      window.location.href = 'tel:2983123456';
-    }
+    function reportForgot() { alert('Reporte enviado a la Base 2983-123456.'); }
+    function claimBase() { window.location.href = 'tel:2983123456'; }
   </script>
 </body>
 </html>
