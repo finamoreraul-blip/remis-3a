@@ -2,371 +2,398 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REMIS 3A - Pasajero</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remis 3A - Chofer</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1e3a8a',
-                        secondary: '#0f172a',
-                        accent: '#d97706',
-                        success: '#16a34a',
-                        danger: '#dc2626'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-        html, body { overflow-y: auto; height: auto; font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; padding: 0; }
-        .map-container { width: 100%; height: 40vh; min-height: 250px; z-index: 1; }
-        .sheet-container { width: 100%; min-height: 60vh; background: #ffffff; border-top-left-radius: 24px; border-top-right-radius: 24px; box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 10; margin-top: -20px; position: relative; padding-bottom: 80px; }
-        .btn-touch { min-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: 700; border-radius: 14px; transition: all 0.2s; }
-        .input-touch { min-height: 56px; border-radius: 12px; border: 2px solid #cbd5e1; padding: 0 16px; font-size: 16px; width: 100%; background: #fff; }
-        .input-touch:focus { border-color: #1e3a8a; outline: none; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        :root {
+            --primary: #0F172A;
+            --secondary: #1E293B;
+            --accent: #D97706;
+            --accent-light: #F59E0B;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text: #0F172A;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        html, body {
+            overflow-y: auto;
+            height: auto;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-container h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .logo-container h1 span {
+            color: var(--accent-light);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 35vh;
+            min-height: 220px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 100px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .btn-main {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+            text-align: center;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 10px;
+            background: #FFF;
+        }
+
+        .pedido-card {
+            background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            animation: pulseCard 1.5s infinite alternate;
+        }
+
+        @keyframes pulseCard {
+            from { border-color: var(--accent); }
+            to { border-color: #B45309; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-100">
+<body>
 
-    <!-- HEADER -->
-    <header class="bg-gradient-to-r from-primary to-secondary text-white px-4 py-3 flex justify-between items-center shadow-md sticky top-0 z-50">
-        <div class="flex items-center space-x-2">
-            <span class="text-2xl font-black tracking-wider">REMIS 3A</span>
-            <span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">Tres Arroyos</span>
+    <header>
+        <div class="logo-container">
+            <h1>REMIS <span>3A</span> (Chofer)</h1>
         </div>
-        <div class="flex space-x-2">
-            <button onclick="triggerSOS()" class="bg-danger text-white px-3 py-2 rounded-xl font-bold text-sm shadow flex items-center space-x-1">
-                <span>🚨 SOS</span>
-            </button>
-            <a href="tel:2983123456" class="bg-slate-700 text-white px-3 py-2 rounded-xl font-bold text-sm shadow flex items-center space-x-1">
-                <span>📞 BASE</span>
-            </a>
+        <div class="header-actions">
+            <button class="btn-header" onclick="abrirPerfil()">⚙️ Perfil</button>
+            <button class="btn-header" style="background:var(--danger)" onclick="emergenciaChofer()">🚨 SOS</button>
         </div>
     </header>
 
-    <!-- MAPA -->
-    <div id="map" class="map-container"></div>
+    <div id="map-container"></div>
 
-    <!-- SHEET CONTENIDO -->
-    <div class="sheet-container px-4 pt-6">
-        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+    <div class="main-content">
+        <!-- ESTADO CONEXION -->
+        <div class="status-bar">
+            <div>
+                <div style="font-size: 12px; opacity: 0.8;">ESTADO ACTUAL</div>
+                <div id="lbl-estado-conexion" style="font-size: 18px; font-weight: bold;">DESCONECTADO</div>
+            </div>
+            <button id="btn-toggle-conexion" class="btn-header" style="background: var(--success); padding: 12px 18px; font-size: 15px;" onclick="toggleConexion()">CONECTARSE</button>
+        </div>
 
-        <!-- BLOQUE FORMULARIO / ESTADO -->
-        <div id="main-view">
-            <!-- PESTAÑA AHORA / RESERVAR -->
-            <div class="flex bg-slate-200 p-1 rounded-xl mb-4">
-                <button onclick="setTipoPedido('ahora')" id="tab-ahora" class="flex-1 py-3 rounded-lg font-bold text-sm bg-white text-primary shadow transition">🚗 Viajar Ahora</button>
-                <button onclick="setTipoPedido('reservar')" id="tab-reservar" class="flex-1 py-3 rounded-lg font-bold text-sm text-slate-600 transition">📅 Reservar</button>
+        <!-- DASHBOARD GANANCIAS HOY -->
+        <div class="card">
+            <div class="section-title">Resumen de Hoy</div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; text-align: center;">
+                <div style="background: var(--bg); padding: 12px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: var(--text-muted);">VIAJES HOY</div>
+                    <div id="dash-viajes" style="font-size: 22px; font-weight: bold;">0</div>
+                </div>
+                <div style="background: var(--bg); padding: 12px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: var(--text-muted);">NETO PARA VOS</div>
+                    <div id="dash-neto" style="font-size: 22px; font-weight: bold; color: var(--success);">$0</div>
+                </div>
+            </div>
+            <button class="btn-header" style="width:100%; background:var(--secondary); justify-content:center; margin-top:12px; padding:10px;" onclick="abrirGastos()">➕ Cargar Gasto (Nafta/GNC)</button>
+        </div>
+
+        <!-- AREA DE NUEVO PEDIDO / VIAJE ACTIVO -->
+        <div id="area-pedidos">
+            <div id="sin-pedidos" class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                Esperando viajes en Tres Arroyos... Conectate para recibir pedidos.
             </div>
 
-            <!-- FORMULARIO DE VIAJE -->
-            <div id="form-viaje" class="space-y-4">
-                <!-- ORIGEN -->
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Origen</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="origen-input" class="input-touch pr-24" placeholder="Mi ubicación actual..." value="Moreno 450">
-                        <button onclick="usarMiUbicacion()" class="absolute right-2 bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-300">📍 GPS</button>
-                    </div>
-                </div>
-
-                <!-- DESTINO -->
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Destino</label>
-                    <input type="text" id="destino-input" oninput="calcularTarifaEnVivo()" class="input-touch" placeholder="Ej: Hospital Pirovano, Rivadavia 200...">
-                    <!-- SUGERENCIAS RÁPIDAS -->
-                    <div class="flex flex-wrap gap-1 mt-2">
-                        <span onclick="setDestino('Hospital Pirovano')" class="text-xs bg-slate-200 px-2.5 py-1 rounded-md cursor-pointer font-medium hover:bg-primary hover:text-white">🏥 Hospital Pirovano</span>
-                        <span onclick="setDestino('Terminal de Ómnibus')" class="text-xs bg-slate-200 px-2.5 py-1 rounded-md cursor-pointer font-medium hover:bg-primary hover:text-white">🚌 Terminal</span>
-                        <span onclick="setDestino('Municipalidad')" class="text-xs bg-slate-200 px-2.5 py-1 rounded-md cursor-pointer font-medium hover:bg-primary hover:text-white">🏛️ Municipalidad</span>
-                        <span onclick="setDestino('Claromecó')" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md cursor-pointer font-bold">🏖️ Claromecó ($15000)</span>
-                    </div>
-                </div>
-
-                <!-- ACCESOS RÁPIDOS CASA/TRABAJO -->
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="setDestino('Casa')" class="bg-slate-100 border border-slate-200 p-2 rounded-xl text-center text-xs font-bold hover:bg-primary hover:text-white transition">🏠 Casa</button>
-                    <button onclick="setDestino('Trabajo')" class="bg-slate-100 border border-slate-200 p-2 rounded-xl text-center text-xs font-bold hover:bg-primary hover:text-white transition">💼 Trabajo</button>
-                    <button onclick="setDestino('Hospital')" class="bg-slate-100 border border-slate-200 p-2 rounded-xl text-center text-xs font-bold hover:bg-primary hover:text-white transition">🏥 Hospital</button>
-                    <button onclick="setDestino('Abuela')" class="bg-slate-100 border border-slate-200 p-2 rounded-xl text-center text-xs font-bold hover:bg-primary hover:text-white transition">👵 Abuela</button>
-                </div>
-
-                <!-- SECCIÓN RESERVA (OCULTA POR DEFECTO) -->
-                <div id="reserva-section" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl space-y-3">
-                    <h4 class="font-bold text-amber-900 text-sm">Programar Reserva</h4>
-                    <div class="flex gap-2">
-                        <button onclick="setDiaReserva('hoy')" id="btn-hoy" class="flex-1 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold">HOY</button>
-                        <button onclick="setDiaReserva('manana')" id="btn-manana" class="flex-1 py-2 bg-white border border-amber-300 text-amber-900 rounded-lg text-xs font-bold">MAÑANA</button>
-                    </div>
-                    <div class="grid grid-cols-4 gap-1">
-                        <button onclick="setHoraReserva('08:00')" class="p-2 bg-white border rounded text-xs font-bold">08:00</button>
-                        <button onclick="setHoraReserva('09:00')" class="p-2 bg-white border rounded text-xs font-bold">09:00</button>
-                        <button onclick="setHoraReserva('10:00')" class="p-2 bg-white border rounded text-xs font-bold">10:00</button>
-                        <button onclick="setHoraReserva('11:00')" class="p-2 bg-white border rounded text-xs font-bold">11:00</button>
-                    </div>
-                    <p id="reserva-aviso" class="text-xs text-amber-800 font-medium italic">Vas a pedir un remis para hoy a las 08:00.</p>
-                </div>
-
-                <!-- TIPO DE AUTO -->
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Tipo de Auto</label>
-                    <select id="tipo-auto" class="input-touch">
-                        <option value="comun">🚗 Auto Común</option>
-                        <option value="baul">🚙 Camioneta Baúl Grande</option>
-                        <option value="5pasajeros">🚐 5 Pasajeros</option>
-                        <option value="bebe">👶 Con Silla Bebé</option>
-                    </select>
-                </div>
-
-                <!-- FORMA DE PAGO -->
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Forma de Pago</label>
-                    <select id="forma-pago" class="input-touch">
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="transferencia">📱 Transferencia (Alias: remis3a.mp)</option>
-                        <option value="cc">📋 Cuenta Corriente</option>
-                    </select>
-                </div>
-
-                <!-- NOTA -->
-                <div>
-                    <input type="text" id="nota-input" class="input-touch text-sm" placeholder="Nota para chofer: ej. 2 valijas, voy con perro...">
-                </div>
-
-                <!-- TARIFA ESTIMADA EN VIVO -->
-                <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold text-slate-500">ESTIMACIÓN</span>
-                        <span id="est-distancia" class="text-xs font-bold text-primary">3.2 km - 8 min</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-black text-secondary" id="est-precio">$2.460</span>
-                        <span class="text-xs text-slate-500 font-medium">Bajada $1500 + KM</span>
-                    </div>
-                </div>
-
-                <!-- BOTÓN PEDIR -->
-                <button onclick="pedirRemis()" class="btn-touch bg-success text-white w-full text-lg shadow-lg hover:bg-green-700">
-                    PEDIR REMIS AHORA 🚀
-                </button>
-            </div>
-
-            <!-- VISTA VIAJE EN CURSO / BUSCANDO (OCULTO INICIALMENTE) -->
-            <div id="view-estado" class="hidden space-y-4">
-                <div class="bg-amber-100 border border-amber-300 p-4 rounded-2xl text-center space-y-2">
-                    <div class="animate-pulse text-2xl">⏳</div>
-                    <h3 id="estado-titulo" class="font-black text-amber-900 text-lg">BUSCANDO CHOFER MÁS CERCANO...</h3>
-                    <p id="estado-sub" class="text-xs font-bold text-amber-700">Choferes conectados: 5 en Tres Arroyos</p>
-                </div>
-
-                <!-- TARJETA CHOFER ASIGNADO (DINÁMICA) -->
-                <div id="card-chofer" class="hidden bg-white border border-slate-200 p-4 rounded-2xl shadow space-y-3">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-14 h-14 bg-slate-300 rounded-full flex items-center justify-center text-2xl font-bold text-white bg-primary">👨‍✈️</div>
-                        <div class="flex-1">
-                            <h4 id="chofer-nombre" class="font-bold text-base">Juan Pérez</h4>
-                            <p id="chofer-auto" class="text-xs text-slate-500">Chevrolet Corsa Gris (Patente AB 123 CD)</p>
-                            <p class="text-xs text-amber-600 font-bold">⭐ 4.8 (234 viajes)</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl text-center">
-                        <span id="chofer-llegada" class="font-black text-primary text-sm">LLEGA EN 4 MIN - A 6 CUADRAS</span>
-                        <div class="w-full bg-slate-200 h-2 rounded-full mt-2 overflow-hidden">
-                            <div id="barra-progreso" class="bg-success h-full w-1/3 transition-all duration-500"></div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 pt-2">
-                        <a id="btn-llamar" href="tel:2983445566" class="btn-touch bg-slate-200 text-slate-800 text-xs py-2">📞 Llamar</a>
-                        <a id="btn-wsp" href="https://wa.me/" target="_blank" class="btn-touch bg-green-600 text-white text-xs py-2">💬 WhatsApp</a>
-                        <button onclick="compartirViaje()" class="btn-touch bg-primary text-white text-xs py-2">🔗 Compartir</button>
-                        <button onclick="abrirChat()" class="btn-touch bg-slate-700 text-white text-xs py-2">💬 Chat</button>
-                    </div>
-                </div>
-
-                <!-- TAXÍMETRO EN VIVO (CUANDO ARRANCA) -->
-                <div id="taximetro-panel" class="hidden bg-slate-900 text-white p-4 rounded-2xl space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span class="text-xs font-bold text-amber-400">EN VIAJE - TAXÍMETRO GPS</span>
-                        <span id="taxi-tiempo" class="text-xs font-mono">00:00:45</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div>
-                            <span class="text-xs text-slate-400">KM RECORRIDOS</span>
-                            <p id="taxi-km" class="text-xl font-black">1.4 km</p>
-                        </div>
-                        <div>
-                            <span class="text-xs text-slate-400">PRECIO ACTUAL</span>
-                            <p id="taxi-precio" class="text-2xl font-black text-success">$1.920</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 pt-2">
-                        <button onclick="agregarParada()" class="flex-1 bg-slate-800 py-2 rounded-xl text-xs font-bold hover:bg-slate-700">➕ Agregar Parada (+$500)</button>
-                        <button onclick="triggerPanico()" class="bg-danger px-4 py-2 rounded-xl text-xs font-bold">🚨 PÁNICO</button>
-                    </div>
-                </div>
-
-                <!-- BOTÓN CANCELAR -->
-                <button onclick="cancelarPedido()" id="btn-cancelar" class="btn-touch bg-danger text-white w-full shadow hover:bg-red-700">
-                    CANCELAR PEDIDO
-                </button>
-            </div>
-
-            <!-- VISTA FINALIZADO (OCULTO) -->
-            <div id="view-fin" class="hidden space-y-4">
-                <div class="bg-white border p-6 rounded-2xl shadow text-center space-y-3">
-                    <div class="text-4xl">✅</div>
-                    <h3 class="font-black text-2xl text-secondary">VIAJE FINALIZADO</h3>
-                    <div class="bg-slate-50 p-4 rounded-xl text-left space-y-2 text-sm">
-                        <div class="flex justify-between"><span>Bajada de bandera</span><span class="font-bold">$1500</span></div>
-                        <div class="flex justify-between"><span>KM Recorridos (4.2 km)</span><span class="font-bold">$1260</span></div>
-                        <div class="flex justify-between border-t pt-2 font-black text-base text-primary"><span>TOTAL A PAGAR</span><span id="fin-total">$2760</span></div>
-                    </div>
-                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 font-medium">
-                        📱 Alias Transferencia: <strong class="text-primary text-sm select-all">remis3a.mp</strong>
-                        <button onclick="copiarAlias()" class="mt-1 block w-full bg-amber-600 text-white py-1.5 rounded-lg font-bold">COPIAR ALIAS</button>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Calificar Chofer</label>
-                        <div class="flex justify-center space-x-2 text-2xl mb-2">
-                            <span onclick="calificar(1)" class="cursor-pointer">⭐</span>
-                            <span onclick="calificar(2)" class="cursor-pointer">⭐</span>
-                            <span onclick="calificar(3)" class="cursor-pointer">⭐</span>
-                            <span onclick="calificar(4)" class="cursor-pointer">⭐</span>
-                            <span onclick="calificar(5)" class="cursor-pointer">⭐</span>
-                        </div>
-                    </div>
-                    <button onclick="reiniciarApp()" class="btn-touch bg-primary text-white w-full">NUEVO VIAJE</button>
+            <div id="tarjeta-pedido-entrante" class="pedido-card hidden">
+                <h3 style="margin-bottom: 8px; color: #78350F;">🔔 ¡NUEVO VIAJE ENTRANTE!</h3>
+                <div style="font-size: 15px; margin-bottom: 6px;"><b>Origen:</b> <span id="ped-origen">Moreno 450</span></div>
+                <div style="font-size: 15px; margin-bottom: 6px;"><b>Destino:</b> <span id="ped-destino">Hospital Pirovano</span></div>
+                <div style="font-size: 15px; margin-bottom: 12px;"><b>Tarifa Est.:</b> <span id="ped-precio" style="color:var(--accent); font-weight:bold;">$2.400</span> (Efectivo)</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-main" style="background: var(--success); font-size: 15px; padding: 12px;" onclick="aceptarViaje()">ACEPTAR VIAJE</button>
+                    <button class="btn-main" style="background: var(--danger); font-size: 15px; padding: 12px;" onclick="rechazarViaje()">RECHAZAR</button>
                 </div>
             </div>
 
+            <div id="tarjeta-viaje-curso" class="card hidden">
+                <div class="section-title">Viaje Asignado / En Curso</div>
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;" id="curso-ruta">Moreno ➔ Hospital</div>
+                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;" id="curso-cliente">Pasajero: Juan • Tel: 2983112233</div>
+                
+                <div id="acciones-proceso">
+                    <button class="btn-main" style="background: #0284C7; margin-bottom: 10px;" onclick="navegarGoogleMaps()">🗺️ Navegar con Google Maps</button>
+                    <button class="btn-main" style="background: var(--success); margin-bottom: 10px;" onclick="marcarLlegada()">1. YA LLEGUÉ AL ORIGEN</button>
+                    <button class="btn-main" style="background: var(--accent); margin-bottom: 10px;" onclick="iniciarTaximetroChofer()">2. INICIAR VIAJE / TAXÍMETRO</button>
+                    <button class="btn-main" style="background: var(--primary);" onclick="finalizarViajeChofer()">3. FINALIZAR Y COBRAR</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- MODAL PERFIL CHOFER -->
+    <div id="modal-perfil" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Perfil del Chofer</h3>
+            <input type="text" id="perfil-nombre" class="input-field" placeholder="Nombre y Apellido" value="Juan Pérez">
+            <input type="text" id="perfil-patente" class="input-field" placeholder="Patente (Ej: AB 123 CD)" value="AB 123 CD">
+            <input type="text" id="perfil-auto" class="input-field" placeholder="Modelo y Color" value="Fiat Cronos Blanco">
+            <input type="text" id="perfil-cel" class="input-field" placeholder="Celular" value="2983445566">
+            <button class="btn-main" onclick="guardarPerfilChofer()">GUARDAR PERFIL</button>
+        </div>
+    </div>
+
     <script>
-        // INICIALIZACIÓN MAPA TRES ARROYOS
-        const map = L.map('map').setView([-38.375, -60.273], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        let mapChofer, markerChofer;
+        let conectado = false;
+        let viajeAsignado = null;
+        let choferPerfil = { nombre: 'Juan Pérez', patente: 'AB 123 CD', auto: 'Fiat Cronos Blanco' };
 
-        let markerOrigen = L.marker([-38.375, -60.273]).addTo(map).bindPopup('<b>Tu ubicación</b> (Moreno 450)').openPopup();
+        window.onload = function() {
+            inicializarMapaChofer();
+            verificarPerfilGuardado();
+            setInterval(simularLlegadaPedidos, 15000); // Simula llegada de pedidos cada 15s si está conectado
+        };
 
-        function usarMiUbicacion() {
-            document.getElementById('origen-input').value = "Moreno 450 (GPS Actual)";
-            map.setView([-38.375, -60.273], 15);
+        function inicializarMapaChofer() {
+            mapChofer = L.map('map-container').setView([-38.375, -60.273], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapChofer);
+            markerChofer = L.marker([-38.375, -60.273]).addTo(mapChofer).bindPopup("Mi Móvil").openPopup();
         }
 
-        function setDestino(lugar) {
-            document.getElementById('destino-input').value = lugar;
-            calcularTarifaEnVivo();
+        function verificarPerfilGuardado() {
+            let p = localStorage.getItem('remis3a_chofer_perfil');
+            if (p) {
+                choferPerfil = JSON.parse(p);
+            }
         }
 
-        function calcularTarifaEnVivo() {
-            let dest = document.getElementById('destino-input').value;
-            let precio = 2700;
-            let km = "4.2 km";
-            if(dest.toLowerCase().includes('claromecó')) { precio = 15000; km = "75 km"; }
-            else if(dest.toLowerCase().includes('terminal')) { precio = 2100; km = "2.1 km"; }
-            else if(dest.toLowerCase().includes('hospital')) { precio = 2400; km = "3.0 km"; }
-            
-            document.getElementById('est-precio').innerText = "$" + precio;
-            document.getElementById('est-distancia').innerText = km + " - 8 min";
+        function abrirPerfil() {
+            document.getElementById('modal-perfil').style.display = 'flex';
         }
 
-        let tipoReservaActiva = 'ahora';
-        function setTipoPedido(tipo) {
-            tipoReservaActiva = tipo;
-            if(tipo === 'reservar') {
-                document.getElementById('tab-reservar').className = "flex-1 py-3 rounded-lg font-bold text-sm bg-white text-primary shadow transition";
-                document.getElementById('tab-ahora').className = "flex-1 py-3 rounded-lg font-bold text-sm text-slate-600 transition";
-                document.getElementById('reserva-section').classList.remove('hidden');
+        function guardarPerfilChofer() {
+            choferPerfil.nombre = document.getElementById('perfil-nombre').value;
+            choferPerfil.patente = document.getElementById('perfil-patente').value;
+            choferPerfil.auto = document.getElementById('perfil-auto').value;
+            localStorage.setItem('remis3a_chofer_perfil', JSON.stringify(choferPerfil));
+            document.getElementById('modal-perfil').style.display = 'none';
+            alert('Perfil guardado exitosamente.');
+        }
+
+        function toggleConexion() {
+            conectado = !conectado;
+            let btn = document.getElementById('btn-toggle-conexion');
+            let lbl = document.getElementById('lbl-estado-conexion');
+            if (conectado) {
+                btn.innerText = 'DESCONECTARSE';
+                btn.style.background = 'var(--danger)';
+                lbl.innerText = 'EN SERVICIO (LIBRE)';
+                alert('Estás conectado. Recibirás pedidos en Tres Arroyos.');
             } else {
-                document.getElementById('tab-ahora').className = "flex-1 py-3 rounded-lg font-bold text-sm bg-white text-primary shadow transition";
-                document.getElementById('tab-reservar').className = "flex-1 py-3 rounded-lg font-bold text-sm text-slate-600 transition";
-                document.getElementById('reserva-section').classList.add('hidden');
+                btn.innerText = 'CONECTARSE';
+                btn.style.background = 'var(--success)';
+                lbl.innerText = 'DESCONECTADO';
+                document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
             }
         }
 
-        function setDiaReserva(dia) {
-            document.getElementById('btn-hoy').className = dia === 'hoy' ? "flex-1 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold" : "flex-1 py-2 bg-white border border-amber-300 text-amber-900 rounded-lg text-xs font-bold";
-            document.getElementById('btn-manana').className = dia === 'manana' ? "flex-1 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold" : "flex-1 py-2 bg-white border border-amber-300 text-amber-900 rounded-lg text-xs font-bold";
+        function simularLlegadaPedidos() {
+            if (!conectado || viajeAsignado) return;
+            // Mostrar pedido simulado
+            document.getElementById('sin-pedidos').classList.add('hidden');
+            document.getElementById('tarjeta-pedido-entrante').classList.remove('hidden');
         }
 
-        function setHoraReserva(hora) {
-            document.getElementById('reserva-aviso').innerText = `Vas a pedir un remis para hoy a las ${hora}.`;
+        function aceptarViaje() {
+            viajeAsignado = {
+                origen: 'Moreno 450',
+                destino: 'Hospital Pirovano',
+                precio: 2400,
+                cliente: 'María Gomez',
+                tel: '2983112233'
+            };
+            document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
+            document.getElementById('tarjeta-viaje-curso').classList.remove('hidden');
+            document.getElementById('curso-ruta').innerText = `${viajeAsignado.origen} ➔ ${viajeAsignado.destino}`;
+            document.getElementById('curso-cliente').innerText = `Pasajero: ${viajeAsignado.cliente} • Tel: ${viajeAsignado.tel}`;
+            alert('¡Viaje aceptado! Diríjase al origen.');
         }
 
-        function pedirRemis() {
-            document.getElementById('form-viaje').classList.add('hidden');
-            document.getElementById('view-estado').classList.remove('hidden');
+        function rechazarViaje() {
+            document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
+            document.getElementById('sin-pedidos').classList.remove('hidden');
+            alert('Viaje rechazado.');
+        }
+
+        function navegarGoogleMaps() {
+            window.open('https://www.google.com/maps/search/?api=1&query=Hospital+Pirovano+Tres+Arroyos', '_blank');
+        }
+
+        function marcarLlegada() {
+            alert('Aviso enviado al pasajero: "Tu remis llegó a la puerta".');
+        }
+
+        function iniciarTaximetroChofer() {
+            alert('Taxímetro iniciado. El viaje está en curso.');
+        }
+
+        function finalizarViajeChofer() {
+            let comisionApp = 2400 * 0.05;
+            let netoChofer = 2400 - comisionApp;
             
-            // Simulación de asignación de chofer a los 3 segundos
-            setTimeout(() => {
-                document.getElementById('estado-titulo').innerText = "¡CHOFER ASIGNADO!";
-                document.getElementById('estado-sub').innerText = "Juan Pérez va en camino a buscarte.";
-                document.getElementById('card-chofer').classList.remove('hidden');
-            }, 3000);
+            // Actualizar dashboard chofer
+            let viajesHoy = parseInt(localStorage.getItem('remis3a_chofer_viajes') || '0') + 1;
+            let totalNetoHoy = parseFloat(localStorage.getItem('remis3a_chofer_neto') || '0') + netoChofer;
+            
+            localStorage.setItem('remis3a_chofer_viajes', viajesHoy);
+            localStorage.setItem('remis3a_chofer_neto', totalNetoHoy);
 
-            // Simulación de inicio de viaje a los 8 segundos
-            setTimeout(() => {
-                document.getElementById('card-chofer').classList.add('hidden');
-                document.getElementById('estado-titulo').innerText = "VIAJE EN CURSO";
-                document.getElementById('estado-sub').innerText = "Destino: Hospital Pirovano";
-                document.getElementById('taximetro-panel').classList.remove('hidden');
-            }, 8000);
+            document.getElementById('dash-viajes').innerText = viajesHoy;
+            document.getElementById('dash-neto').innerText = `$${totalNetoHoy.toLocaleString()}`;
 
-            // Simulación de finalización a los 15 segundos
-            setTimeout(() => {
-                document.getElementById('view-estado').classList.add('hidden');
-                document.getElementById('view-fin').classList.remove('hidden');
-            }, 15000);
+            document.getElementById('tarjeta-viaje-curso').classList.add('hidden');
+            document.getElementById('sin-pedidos').classList.remove('hidden');
+            viajeAsignado = null;
+            alert(`¡Viaje finalizado con éxito!\nFacturado: $2400\nComisión App (5%): $${comisionApp}\nTe queda: $${netoChofer}`);
         }
 
-        function cancelarPedido() {
-            if(confirm("¿Estás seguro de cancelar? Si el chofer ya aceptó se cobrará $500.")) {
-                alert("Pedido cancelado.");
-                reiniciarApp();
+        function abrirGastos() {
+            let monto = prompt("Ingrese el monto del gasto (Nafta / GNC / Lavado):");
+            if (monto) {
+                alert('Gasto de $' + monto + ' registrado y descontado de la ganancia neta.');
             }
         }
 
-        function reiniciarApp() {
-            location.reload();
-        }
-
-        function triggerSOS() {
-            alert("🚨 ALERTA SOS ENVIADA A LA BASE Y 911. Ubicación compartida.");
-        }
-
-        function compartirViaje() {
-            alert("Enlace de seguimiento en vivo copiado al portapapeles.");
-        }
-
-        function abrirChat() {
-            let msg = prompt("Escriba mensaje rápido para el chofer:", "Ya salgo a la puerta");
-            if(msg) alert("Mensaje enviado al chofer.");
-        }
-
-        function agregarParada() {
-            alert("Parada agregada (+ $500 al total).");
-        }
-
-        function copiarAlias() {
-            navigator.clipboard.writeText("remis3a.mp");
-            alert("Alias copiado: remis3a.mp");
-        }
-
-        function calificar(estrellas) {
-            alert("¡Gracias por calificar con " + estrellas + " estrellas!");
+        function emergenciaChofer() {
+            alert('🚨 EMERGENCIA: Alerta enviada a la Base 3A y autoridades.');
+            window.open('https://wa.me/2983123456?text=EMERGENCIA%20CHOFER:%20Necesito%20asistencia%20urgente.', '_blank');
         }
     </script>
 </body>
-    </html>
+</html>
