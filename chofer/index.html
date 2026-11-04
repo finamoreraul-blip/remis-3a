@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remis Neco - Chofer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #FFC300;
+            --bg: #0d0d0d;
+            --card: #18181b;
+            --card-border: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        header {
+            background: var(--card); padding: 14px 18px; border-bottom: 1px solid var(--card-border);
+            display: flex; justify-content: space-between; align-items: center; z-index: 1000;
+        }
+        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+        .badge { background: #27272a; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+        #map-container { position: relative; flex: 1; width: 100%; }
+        #map { width: 100%; height: 100%; }
+
+        .btn-recenter {
+            position: absolute; bottom: 16px; right: 16px; z-index: 500;
+            background: var(--card); color: var(--text); border: 1px solid var(--card-border);
+            padding: 10px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer;
+        }
+
+        .panel {
+            background: var(--card); border-radius: 20px 20px 0 0; padding: 20px;
+            display: flex; flex-direction: column; gap: 14px; z-index: 1000;
+            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); max-height: 55vh; overflow-y: auto;
+        }
+
+        .btn-main {
+            background: var(--primary); color: #000; border: none; padding: 16px;
+            border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer;
+            width: 100%; text-transform: uppercase;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+        input {
+            width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--card-border);
+            background: #09090b; color: white; font-size: 0.95rem; outline: none;
+        }
+
+        /* CARD DE NUEVO VIAJE MODAL */
+        .modal-viaje {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-card {
+            background: #18181b; border: 2px solid var(--primary); border-radius: 20px;
+            padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px;
+            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .taximetro-box {
+            background: #09090b; border: 1px solid var(--primary); border-radius: 16px;
+            padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 8px;
+        }
+        .tax-val { font-size: 2.5rem; font-weight: 900; color: var(--primary); font-family: monospace; }
+
+        .driver-marker {
+            width: 24px; height: 24px; background: var(--primary); border: 3px solid #000;
+            border-radius: 50%; box-shadow: 0 0 12px rgba(255, 195, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">🚖 REMIS NECO</div>
+        <div class="badge" id="header-driver">CHOFER</div>
+    </header>
+
+    <div id="map-container">
+        <div id="map"></div>
+        <button class="btn-recenter" onclick="recentrarMapa()">🎯 Mi ubicación</button>
+    </div>
+
+    <div class="panel">
+        <!-- LOGIN SECTION -->
+        <div id="login-section" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="form-group">
+                <label>Patente del Vehículo</label>
+                <input type="text" id="patente" placeholder="Ej: AB123CD" style="text-transform:uppercase;">
+            </div>
+            <div class="form-group">
+                <label>Nombre del Chofer</label>
+                <input type="text" id="nombre" placeholder="Ej: Carlos Rodríguez">
+            </div>
+            <button class="btn-main" onclick="iniciarSesionChofer()">Ingresar al Sistema</button>
+        </div>
+
+        <!-- CONTROL SECTION -->
+        <div id="control-section" style="display:none; flex-direction:column; gap:12px;">
+            <button class="btn-main" id="btn-disponible" style="background:var(--success); color:white;" onclick="toggleDisponible()">🟢 ESTOY DISPONIBLE</button>
+            <div style="font-size:0.8rem; color:var(--text-muted); text-align:center;" id="gps-status-txt">GPS activo enviando ubicación...</div>
+        </div>
+
+        <!-- TAXIMETRO SECTION -->
+        <div id="taximetro-section" style="display:none; flex-direction:column; gap:12px;">
+            <div class="taximetro-box">
+                <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">TAXÍMETRO EN VIVO</div>
+                <div class="tax-val" id="tax-total">$1.800</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);" id="tax-distancia">Distancia recorrida: 0 m</div>
+            </div>
+            <button class="btn-main" style="background:var(--danger); color:white;" onclick="finalizarViaje()">Finalizar Viaje</button>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO VIAJE -->
+    <div class="modal-viaje" id="modal-viaje" style="display:none;">
+        <div class="modal-card">
+            <div style="color:var(--primary); font-weight:800; font-size:1.1rem; text-align:center;">🔔 ¡NUEVO VIAJE SOLICITADO!</div>
+            <div>
+                <label>Origen:</label>
+                <div id="modal-origen" style="font-weight:700; font-size:1rem; margin-bottom:8px;">-</div>
+                <label>Destino:</label>
+                <div id="modal-destino" style="font-weight:700; font-size:1rem;">-</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-main" style="background:var(--danger); color:white; flex:1;" onclick="rechazarViaje()">Rechazar</button>
+                <button class="btn-main" style="background:var(--success); color:white; flex:1;" onclick="aceptarViaje()">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "PONÉ ACÁ TU URL";
+        const SUPABASE_KEY = "PONÉ ACÁ TU KEY";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let map, driverMarker;
+        let driverLat = null, driverLng = null;
+        let choferData = null;
+        let esDisponible = false;
+        let viajePendiente = null;
+        let viajeActivo = null;
+
+        // TAXIMETRO
+        let taxBase = 1800;
+        let taxAcumulado = 1800;
+        let metrosRecorridos = 0;
+        let ultimaLat = null, ultimaLng = null;
+
+        window.addEventListener('load', () => {
+            initMap();
+            comprobarSesion();
+        });
+
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([-38.3764, -60.2721], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+
+        function comprobarSesion() {
+            const saved = localStorage.getItem('remis_chofer_data');
+            if (saved) {
+                choferData = JSON.parse(saved);
+                mostrarPanelControl();
+                iniciarRastreoGPS();
+                escucharViajesPendientes();
+            }
+        }
+
+        async function iniciarSesionChofer() {
+            const patente = document.getElementById('patente').value.trim().toUpperCase();
+            const nombre = document.getElementById('nombre').value.trim();
+
+            if (!patente || !nombre) {
+                alert("Completá patente y nombre.");
+                return;
+            }
+
+            choferData = { patente, nombre };
+            localStorage.setItem('remis_chofer_data', JSON.stringify(choferData));
+
+            mostrarPanelControl();
+            iniciarRastreoGPS();
+            escucharViajesPendientes();
+        }
+
+        function mostrarPanelControl() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('control-section').style.display = 'flex';
+            document.getElementById('header-driver').innerText = choferData.patente;
+        }
+
+        function iniciarRastreoGPS() {
+            if (!navigator.geolocation) return;
+
+            const driverIcon = L.divIcon({ className: 'driver-marker', iconSize: [24, 24], iconAnchor: [12, 12] });
+
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    const { latitude: lat, longitude: lng } = pos.coords;
+                    driverLat = lat;
+                    driverLng = lng;
+
+                    if (!driverMarker) {
+                        driverMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
+                        map.setView([lat, lng], 16);
+                    } else {
+                        driverMarker.setLatLng([lat, lng]);
+                    }
+
+                    // Calcular distancia taxímetro si hay viaje activo
+                    if (viajeActivo && ultimaLat !== null && ultimaLng !== null) {
+                        const dist = calcularDistanciaMetros(ultimaLat, ultimaLng, lat, lng);
+                        if (dist > 5) { // filtrar ruido de GPS
+                            metrosRecorridos += dist;
+                            actualizarTaximetro();
+                        }
+                    }
+                    ultimaLat = lat;
+                    ultimaLng = lng;
+                },
+                (err) => console.warn(err),
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+            );
+
+            // Guardar en Supabase cada 5 segundos
+            setInterval(() => {
+                if (choferData && driverLat && driverLng) {
+                    supabaseClient.from('choferes').upsert([{
+                        patente: choferData.patente,
+                        nombre: choferData.nombre,
+                        lat: driverLat,
+                        lng: driverLng,
+                        disponible: esDisponible,
+                        actualizado_en: new Date().toISOString()
+                    }]);
+                }
+            }, 5000);
+        }
+
+        async function toggleDisponible() {
+            esDisponible = !esDisponible;
+            const btn = document.getElementById('btn-disponible');
+
+            if (esDisponible) {
+                btn.style.background = 'var(--success)';
+                btn.innerText = '🟢 ESTOY DISPONIBLE';
+            } else {
+                btn.style.background = 'var(--danger)';
+                btn.innerText = '🔴 NO DISPONIBLE';
+            }
+
+            if (choferData && driverLat) {
+                await supabaseClient.from('choferes').upsert([{
+                    patente: choferData.patente,
+                    nombre: choferData.nombre,
+                    lat: driverLat,
+                    lng: driverLng,
+                    disponible: esDisponible,
+                    actualizado_en: new Date().toISOString()
+                }]);
+            }
+        }
+
+        function escucharViajesPendientes() {
+            supabaseClient
+                .channel('viajes-pendientes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'viajes' }, (payload) => {
+                    const viaje = payload.new;
+                    if (viaje.estado === 'pendiente' && esDisponible && !viajeActivo) {
+                        notificarNuevoViaje(viaje);
+                    }
+                })
+                .subscribe();
+        }
+
+        function notificarNuevoViaje(viaje) {
+            viajePendiente = viaje;
+            document.getElementById('modal-origen').innerText = viaje.origen_texto;
+            document.getElementById('modal-destino').innerText = viaje.destino_texto;
+            document.getElementById('modal-viaje').style.display = 'flex';
+
+            // Alarma de audio sintética
+            reproducirAlarma();
+
+            // Vibración nativa
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500, 200, 800]);
+            }
+        }
+
+        function reproducirAlarma() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 1.2);
+            } catch(e) {}
+        }
+
+        function rechazarViaje() {
+            document.getElementById('modal-viaje').style.display = 'none';
+            viajePendiente = null;
+        }
+
+        async function aceptarViaje() {
+            if (!viajePendiente) return;
+
+            viajeActivo = viajePendiente;
+            viajePendiente = null;
+            document.getElementById('modal-viaje').style.display = 'none';
+
+            // Actualizar Supabase
+            await supabaseClient.from('viajes').update({
+                estado: 'aceptado',
+                chofer_patente: choferData.patente
+            }).eq('id', viajeActivo.id);
+
+            // Iniciar Taxímetro UI
+            document.getElementById('control-section').style.display = 'none';
+            document.getElementById('taximetro-section').style.display = 'flex';
+
+            taxAcumulado = 1800;
+            metrosRecorridos = 0;
+            actualizarTaximetro();
+        }
+
+        function actualizarTaximetro() {
+            const tramos100m = Math.floor(metrosRecorridos / 100);
+            taxAcumulado = taxBase + (tramos100m * 350);
+            document.getElementById('tax-total').innerText = '$' + taxAcumulado.toLocaleString('es-AR');
+            document.getElementById('tax-distancia').innerText = `Distancia recorrida: ${Math.round(metrosRecorridos)} m`;
+        }
+
+        async function finalizarViaje() {
+            if (!viajeActivo) return;
+
+            await supabaseClient.from('viajes').update({
+                estado: 'finalizado',
+                monto_total: taxAcumulado
+            }).eq('id', viajeActivo.id);
+
+            alert(`Viaje Finalizado. Total a cobrar: $${taxAcumulado}`);
+
+            viajeActivo = null;
+            document.getElementById('taximetro-section').style.display = 'none';
+            document.getElementById('control-section').style.display = 'flex';
+        }
+
+        function recentrarMapa() {
+            if (driverLat && driverLng) {
+                map.flyTo([driverLat, driverLng], 16);
+            }
+        }
+
+        function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+    </script>
+</body>
+          </html>
