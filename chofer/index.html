@@ -1,388 +1,570 @@
+<!-- Save as: chofer/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Remis Neco - Chofer</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #FFC300;
-            --bg: #0d0d0d;
-            --card: #18181b;
-            --card-border: #27272a;
-            --text: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>REMIS 3A - Chofer & Admin</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --accent: #2196f3;
+      --accent-green: #4caf50;
+      --accent-red: #f44336;
+      --text: #ffffff;
+      --subtext: #aaaaaa;
+      --border: #333333;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { height: 60px; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 1000; border-bottom: 1px solid var(--border); }
+    header h1 { font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+    .status-online { background: var(--accent-green); color: #fff; }
+    .status-offline { background: #555; color: #fff; }
 
-        header {
-            background: var(--card); padding: 14px 18px; border-bottom: 1px solid var(--card-border);
-            display: flex; justify-content: space-between; align-items: center; z-index: 1000;
-        }
-        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
-        .badge { background: #27272a; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    #map-container { flex: 1; position: relative; width: 100%; height: 100%; }
+    #map { width: 100%; height: 100%; }
 
-        #map-container { position: relative; flex: 1; width: 100%; }
-        #map { width: 100%; height: 100%; }
+    .sheet { background: var(--card); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 16px; border-top: 1px solid var(--border); max-height: 70vh; overflow-y: auto; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); }
+    .form-group { margin-bottom: 10px; }
+    label { font-size: 0.75rem; color: var(--subtext); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; }
+    input, select { width: 100%; height: 46px; background: #2a2a2a; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 0 12px; font-size: 0.95rem; outline: none; }
+    
+    .btn-main { width: 100%; height: 60px; background: var(--accent-green); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 8px; box-shadow: 0 4px 15px rgba(76,175,80,0.4); }
+    .btn-main:active { transform: scale(0.98); }
+    .btn-danger { background: var(--accent-red); width: 100%; height: 50px; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 6px; }
 
-        .btn-recenter {
-            position: absolute; bottom: 16px; right: 16px; z-index: 500;
-            background: var(--card); color: var(--text); border: 1px solid var(--card-border);
-            padding: 10px 14px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer;
-        }
+    .dash-box { background: #181818; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 0.85rem; }
+    .dash-box h4 { font-size: 0.9rem; color: var(--accent); margin-bottom: 6px; }
 
-        .panel {
-            background: var(--card); border-radius: 20px 20px 0 0; padding: 20px;
-            display: flex; flex-direction: column; gap: 14px; z-index: 1000;
-            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); max-height: 55vh; overflow-y: auto;
-        }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .btn-action { height: 48px; background: #2a2a2a; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
 
-        .btn-main {
-            background: var(--primary); color: #000; border: none; padding: 16px;
-            border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer;
-            width: 100%; text-transform: uppercase;
-        }
+    .taximetro { background: #000; border: 2px solid var(--accent-green); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 12px; }
+    .taximetro .price { font-size: 2.8rem; font-weight: 900; color: var(--accent-green); line-height: 1; margin: 8px 0; }
 
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
-        input {
-            width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--card-border);
-            background: #09090b; color: white; font-size: 0.95rem; outline: none;
-        }
+    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: var(--card); width: 100%; max-width: 450px; border-radius: 12px; padding: 16px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
 
-        /* CARD DE NUEVO VIAJE MODAL */
-        .modal-viaje {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999;
-            display: flex; align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-card {
-            background: #18181b; border: 2px solid var(--primary); border-radius: 20px;
-            padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px;
-            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes bounceIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .taximetro-box {
-            background: #09090b; border: 1px solid var(--primary); border-radius: 16px;
-            padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 8px;
-        }
-        .tax-val { font-size: 2.5rem; font-weight: 900; color: var(--primary); font-family: monospace; }
-
-        .driver-marker {
-            width: 24px; height: 24px; background: var(--primary); border: 3px solid #000;
-            border-radius: 50%; box-shadow: 0 0 12px rgba(255, 195, 0, 0.9);
-        }
-    </style>
+    .order-card { background: #222; border: 2px solid var(--accent); padding: 12px; border-radius: 10px; margin-bottom: 12px; }
+    
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.85rem; font-weight: bold; background: #222; color: #aaa; cursor: pointer; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+    .tab.active { background: var(--card); color: #fff; border-bottom: 2px solid var(--accent); }
+  </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand">🚖 REMIS NECO</div>
-        <div class="badge" id="header-driver">CHOFER</div>
-    </header>
-
-    <div id="map-container">
-        <div id="map"></div>
-        <button class="btn-recenter" onclick="recentrarMapa()">🎯 Mi ubicación</button>
+  <header>
+    <h1>REMIS 3A - CHOFER</h1>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span id="status-tag" class="status-badge status-offline">OFFLINE</span>
+      <button style="background:#333; border:1px solid #555; color:#fff; padding:6px 10px; border-radius:6px; font-size:0.75rem; font-weight:bold;" onclick="openAdminModal()">🔑 ADMIN</button>
     </div>
+  </header>
 
-    <div class="panel">
-        <!-- LOGIN SECTION -->
-        <div id="login-section" style="display:flex; flex-direction:column; gap:12px;">
-            <div class="form-group">
-                <label>Patente del Vehículo</label>
-                <input type="text" id="patente" placeholder="Ej: AB123CD" style="text-transform:uppercase;">
-            </div>
-            <div class="form-group">
-                <label>Nombre del Chofer</label>
-                <input type="text" id="nombre" placeholder="Ej: Carlos Rodríguez">
-            </div>
-            <button class="btn-main" onclick="iniciarSesionChofer()">Ingresar al Sistema</button>
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+
+  <div class="sheet" id="driver-sheet">
+    <!-- UI DINÁMICA DE CHOFER -->
+  </div>
+
+  <!-- MODAL ADMIN / GASTOS -->
+  <div id="driver-modal" class="modal" style="display: none;"></div>
+
+  <script>
+    const TRES_ARROYOS = [-38.375, -60.273];
+    const BAJADA = 1500;
+    const POR_KM = 300;
+    const MINIMO = 2000;
+    const EXTRA_PARADA = 500;
+    const APP_FEE = 0.05; // 5% para la app
+
+    let map, driverMarker, routePolyline;
+    let isAvailable = false;
+    let driverProfile = null;
+    let activeTrip = null;
+    let pendingOrderIncoming = null;
+
+    // TAXIMETRO EN VIVO
+    let taximeterInterval = null;
+    let liveKm = 0.0;
+    let liveSeconds = 0;
+
+    window.onload = () => {
+      initMap();
+      loadProfile();
+      checkActiveTrip();
+      renderSheet();
+      window.addEventListener('storage', syncDriverState);
+      setInterval(listenPendingOrders, 2000);
+    };
+
+    function initMap() {
+      map = L.map('map', { zoomControl: false }).setView(TRES_ARROYOS, 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+      const carIcon = L.divIcon({ html: '🚗', className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+      driverMarker = L.marker(TRES_ARROYOS, { icon: carIcon }).addTo(map);
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(pos => {
+          let p = [pos.coords.latitude, pos.coords.longitude];
+          driverMarker.setLatLng(p);
+          if (isAvailable && activeTrip) {
+            updateDriverPosInTrip(p);
+          }
+        }, err => console.log(err), { enableHighAccuracy: true });
+      }
+    }
+
+    function loadProfile() {
+      driverProfile = JSON.parse(localStorage.getItem('remis3a_driver_profile') || 'null');
+    }
+
+    function syncDriverState() {
+      checkActiveTrip();
+      renderSheet();
+    }
+
+    function checkActiveTrip() {
+      activeTrip = JSON.parse(localStorage.getItem('remis3a_active_order') || 'null');
+    }
+
+    function listenPendingOrders() {
+      if (!isAvailable || activeTrip) return;
+      let pending = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
+      if (pending.length > 0 && !pendingOrderIncoming) {
+        pendingOrderIncoming = pending[0];
+        renderSheet();
+        playAlertSound();
+      }
+    }
+
+    function playAlertSound() {
+      try {
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      } catch(e) {}
+    }
+
+    function renderSheet() {
+      const container = document.getElementById('driver-sheet');
+
+      if (!driverProfile) {
+        renderLoginUI(container);
+        return;
+      }
+
+      if (!isAvailable) {
+        renderOfflineUI(container);
+        return;
+      }
+
+      if (pendingOrderIncoming && !activeTrip) {
+        renderIncomingOrderUI(container, pendingOrderIncoming);
+        return;
+      }
+
+      if (!activeTrip) {
+        renderDashboardUI(container);
+      } else if (activeTrip.status === 'ASIGNADO') {
+        renderAcceptedTripUI(container, activeTrip);
+      } else if (activeTrip.status === 'EN_VIAJE') {
+        renderTaximeterUI(container, activeTrip);
+      } else if (activeTrip.status === 'FINALIZADO') {
+        renderFinishTripUI(container, activeTrip);
+      }
+    }
+
+    function renderLoginUI(container) {
+      container.innerHTML = `
+        <h3>📝 Registro / Login Chofer</h3>
+        <p style="font-size:0.8rem; color:var(--subtext); margin-bottom:12px;">Ingresá tus datos para empezar a trabajar en Tres Arroyos</p>
+        <div class="form-group"><label>Nombre Completo</label><input type="text" id="reg-name" value="Juan Pérez"></div>
+        <div class="form-group"><label>DNI</label><input type="number" id="reg-dni" value="35123456"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="form-group"><label>Patente</label><input type="text" id="reg-plate" value="AB 123 CD"></div>
+          <div class="form-group"><label>Modelo / Año</label><input type="text" id="reg-model" value="Fiat Cronos 2023"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="form-group"><label>Color</label><input type="text" id="reg-color" value="Blanco"></div>
+          <div class="form-group"><label>Celular</label><input type="tel" id="reg-phone" value="2983-654321"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="form-group"><label>Venc. Carnet</label><input type="date" id="reg-carnet" value="2027-10-10"></div>
+          <div class="form-group"><label>Venc. Seguro</label><input type="date" id="reg-seguro" value="2026-11-15"></div>
+        </div>
+        <button class="btn-main" onclick="saveDriverProfile()">GUARDAR Y CONTINUAR</button>
+      `;
+    }
+
+    function saveDriverProfile() {
+      driverProfile = {
+        name: document.getElementById('reg-name').value,
+        dni: document.getElementById('reg-dni').value,
+        plate: document.getElementById('reg-plate').value,
+        model: document.getElementById('reg-model').value,
+        color: document.getElementById('reg-color').value,
+        phone: document.getElementById('reg-phone').value,
+        carnet: document.getElementById('reg-carnet').value,
+        seguro: document.getElementById('reg-seguro').value
+      };
+      localStorage.setItem('remis3a_driver_profile', JSON.stringify(driverProfile));
+      renderSheet();
+    }
+
+    function renderOfflineUI(container) {
+      // Verificar vencimientos
+      let alertMsg = '';
+      if (driverProfile.seguro) {
+        let diff = (new Date(driverProfile.seguro) - new Date()) / (1000 * 60 * 60 * 24);
+        if (diff <= 7 && diff >= 0) {
+          alertMsg = `⚠️ Atencion: Tu seguro vence en ${Math.ceil(diff)} días.`;
+        }
+      }
+
+      container.innerHTML = `
+        ${alertMsg ? `<div style="background:#f57c00; padding:8px; border-radius:6px; font-size:0.8rem; margin-bottom:8px; text-align:center; font-weight:bold;">${alertMsg}</div>` : ''}
+        <div class="form-group">
+          <label>Ubicación de Salida</label>
+          <select id="driver-location-type">
+            <option value="EN BASE">EN BASE</option>
+            <option value="EN LA CALLE">EN LA CALLE</option>
+          </select>
+        </div>
+        <button class="btn-main" style="height:70px; font-size:1.3rem;" onclick="setAvailable(true)">PONERME DISPONIBLE</button>
+      `;
+    }
+
+    function setAvailable(val) {
+      isAvailable = val;
+      const tag = document.getElementById('status-tag');
+      if (val) {
+        tag.className = 'status-badge status-online';
+        tag.innerText = 'ONLINE';
+      } else {
+        tag.className = 'status-badge status-offline';
+        tag.innerText = 'OFFLINE';
+      }
+      renderSheet();
+    }
+
+    function renderDashboardUI(container) {
+      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":8, "total":25000}');
+      let appFee = stats.total * APP_FEE;
+      let net = stats.total - appFee;
+
+      container.innerHTML = `
+        <div class="dash-box">
+          <h4>📊 Resumen de Hoy</h4>
+          <p><strong>Viajes realizados:</strong> ${stats.trips}</p>
+          <p><strong>Total cobrado:</strong> $${stats.total}</p>
+          <p><strong>Comisión App (5%):</strong> -$${appFee}</p>
+          <hr style="border-color:#333; margin:6px 0;">
+          <p style="font-size:1.1rem; color:var(--accent-green);"><strong>Te quedan libres:</strong> $${net}</p>
         </div>
 
-        <!-- CONTROL SECTION -->
-        <div id="control-section" style="display:none; flex-direction:column; gap:12px;">
-            <button class="btn-main" id="btn-disponible" style="background:var(--success); color:white;" onclick="toggleDisponible()">🟢 ESTOY DISPONIBLE</button>
-            <div style="font-size:0.8rem; color:var(--text-muted); text-align:center;" id="gps-status-txt">GPS activo enviando ubicación...</div>
+        <div style="text-align:center; padding:20px; border:2px dashed #444; border-radius:10px; margin-bottom:12px;">
+          <p style="color:var(--subtext);">📡 Esperando nuevos viajes en Tres Arroyos...</p>
         </div>
 
-        <!-- TAXIMETRO SECTION -->
-        <div id="taximetro-section" style="display:none; flex-direction:column; gap:12px;">
-            <div class="taximetro-box">
-                <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">TAXÍMETRO EN VIVO</div>
-                <div class="tax-val" id="tax-total">$1.800</div>
-                <div style="font-size:0.8rem; color:var(--text-muted);" id="tax-distancia">Distancia recorrida: 0 m</div>
-            </div>
-            <button class="btn-main" style="background:var(--danger); color:white;" onclick="finalizarViaje()">Finalizar Viaje</button>
+        <div class="action-grid">
+          <button class="btn-action" onclick="openGastosModal()">⛽ Cargar Gasto</button>
+          <button class="btn-action" style="background:var(--accent-red);" onclick="setAvailable(false)">🔴 Desconectar</button>
         </div>
-    </div>
+      `;
+    }
 
-    <!-- MODAL NUEVO VIAJE -->
-    <div class="modal-viaje" id="modal-viaje" style="display:none;">
-        <div class="modal-card">
-            <div style="color:var(--primary); font-weight:800; font-size:1.1rem; text-align:center;">🔔 ¡NUEVO VIAJE SOLICITADO!</div>
-            <div>
-                <label>Origen:</label>
-                <div id="modal-origen" style="font-weight:700; font-size:1rem; margin-bottom:8px;">-</div>
-                <label>Destino:</label>
-                <div id="modal-destino" style="font-weight:700; font-size:1rem;">-</div>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-main" style="background:var(--danger); color:white; flex:1;" onclick="rechazarViaje()">Rechazar</button>
-                <button class="btn-main" style="background:var(--success); color:white; flex:1;" onclick="aceptarViaje()">ACEPTAR</button>
-            </div>
+    function renderIncomingOrderUI(container, order) {
+      container.innerHTML = `
+        <div class="order-card">
+          <h3 style="color:var(--accent); margin-bottom:6px;">🔔 ¡NUEVO PEDIDO RECIBIDO!</h3>
+          <p><strong>Origen:</strong> ${order.originName || 'Ubicación GPS'}</p>
+          <p><strong>Destino:</strong> ${order.destName}</p>
+          <p><strong>Estimado:</strong> $${order.estimatedFare} (${order.payment})</p>
+          ${order.note ? `<p style="color:#fbc02d;"><strong>Nota:</strong> ${order.note}</p>` : ''}
+          <p><strong>Cliente:</strong> María ⭐ 4.9</p>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
+            <button class="btn-main" style="height:50px; font-size:1rem;" onclick="acceptOrder()">ACEPTAR (20s)</button>
+            <button class="btn-danger" style="height:50px; margin-top:0;" onclick="rejectOrder()">RECHAZAR</button>
+          </div>
         </div>
-    </div>
+      `;
+    }
 
-    <script>
-        const SUPABASE_URL = "PONÉ ACÁ TU URL";
-        const SUPABASE_KEY = "PONÉ ACÁ TU KEY";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function acceptOrder() {
+      let pending = JSON.parse(localStorage.getItem('remis3a_pending_orders') || '[]');
+      pending.shift();
+      localStorage.setItem('remis3a_pending_orders', JSON.stringify(pending));
 
-        let map, driverMarker;
-        let driverLat = null, driverLng = null;
-        let choferData = null;
-        let esDisponible = false;
-        let viajePendiente = null;
-        let viajeActivo = null;
+      pendingOrderIncoming.status = 'ASIGNADO';
+      pendingOrderIncoming.driver = {
+        name: driverProfile.name,
+        photo: '👨',
+        plate: driverProfile.plate,
+        model: `${driverProfile.model} ${driverProfile.color}`,
+        rating: '4.9'
+      };
+      pendingOrderIncoming.driverPos = TRES_ARROYOS;
 
-        // TAXIMETRO
-        let taxBase = 1800;
-        let taxAcumulado = 1800;
-        let metrosRecorridos = 0;
-        let ultimaLat = null, ultimaLng = null;
+      localStorage.setItem('remis3a_active_order', JSON.stringify(pendingOrderIncoming));
+      activeTrip = pendingOrderIncoming;
+      pendingOrderIncoming = null;
 
-        window.addEventListener('load', () => {
-            initMap();
-            comprobarSesion();
-        });
+      renderSheet();
+    }
 
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([-38.3764, -60.2721], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        }
+    function rejectOrder() {
+      pendingOrderIncoming = null;
+      renderSheet();
+    }
 
-        function comprobarSesion() {
-            const saved = localStorage.getItem('remis_chofer_data');
-            if (saved) {
-                choferData = JSON.parse(saved);
-                mostrarPanelControl();
-                iniciarRastreoGPS();
-                escucharViajesPendientes();
-            }
-        }
+    function updateDriverPosInTrip(pos) {
+      if (!activeTrip) return;
+      activeTrip.driverPos = pos;
+      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
+    }
 
-        async function iniciarSesionChofer() {
-            const patente = document.getElementById('patente').value.trim().toUpperCase();
-            const nombre = document.getElementById('nombre').value.trim();
+    function renderAcceptedTripUI(container, order) {
+      container.innerHTML = `
+        <div style="background:#1565c0; padding:8px; text-align:center; font-weight:bold; border-radius:6px; margin-bottom:8px;">
+          🚖 EN CAMINO A BUSCAR AL PASAJERO
+        </div>
 
-            if (!patente || !nombre) {
-                alert("Completá patente y nombre.");
-                return;
-            }
+        <div class="dash-box">
+          <p><strong>Pasajero:</strong> María ⭐ 4.9</p>
+          <p><strong>Ir a:</strong> ${order.originName || 'GPS'}</p>
+          <p><strong>Destino Final:</strong> ${order.destName}</p>
+        </div>
 
-            choferData = { patente, nombre };
-            localStorage.setItem('remis_chofer_data', JSON.stringify(choferData));
+        <button class="btn-main" style="background:#1976d2; margin-bottom:8px;" onclick="notifyArrival()">📢 YA LLEGUÉ (AVISAR AL PASAJERO)</button>
+        <button class="btn-main" onclick="startTaximeter()">▶️ INICIAR VIAJE (TAXÍMETRO)</button>
 
-            mostrarPanelControl();
-            iniciarRastreoGPS();
-            escucharViajesPendientes();
-        }
+        <div class="action-grid" style="margin-top:8px;">
+          <button class="btn-action" onclick="window.location.href='tel:2983123456'">📞 Llamar</button>
+          <button class="btn-action" onclick="window.location.href='https://wa.me/542983123456'">💬 WhatsApp</button>
+        </div>
 
-        function mostrarPanelControl() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('control-section').style.display = 'flex';
-            document.getElementById('header-driver').innerText = choferData.patente;
-        }
+        <button class="btn-action" style="width:100%; margin-top:8px; background:#444;" onclick="passengerNoShow()">⚠️ PASAJERO NO SALIÓ (COBRAR $500)</button>
+      `;
+    }
 
-        function iniciarRastreoGPS() {
-            if (!navigator.geolocation) return;
+    function notifyArrival() {
+      alert('Aviso "TU REMIS LLEGÓ - SALÍ POR FAVOR" enviado al pasajero.\nRECORDATORIO: No hay cobro ni contador de espera. El chofer espera gratis.');
+    }
 
-            const driverIcon = L.divIcon({ className: 'driver-marker', iconSize: [24, 24], iconAnchor: [12, 12] });
+    function passengerNoShow() {
+      if (confirm('¿Pasaron 10 minutos sin que el pasajero salga? Se cancelará el viaje y se acreditarán $500.')) {
+        let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":0, "total":0}');
+        stats.total += 500;
+        localStorage.setItem('remis3a_driver_stats', JSON.stringify(stats));
 
-            navigator.geolocation.watchPosition(
-                (pos) => {
-                    const { latitude: lat, longitude: lng } = pos.coords;
-                    driverLat = lat;
-                    driverLng = lng;
+        localStorage.removeItem('remis3a_active_order');
+        activeTrip = null;
+        renderSheet();
+      }
+    }
 
-                    if (!driverMarker) {
-                        driverMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
-                        map.setView([lat, lng], 16);
-                    } else {
-                        driverMarker.setLatLng([lat, lng]);
-                    }
+    function startTaximeter() {
+      activeTrip.status = 'EN_VIAJE';
+      activeTrip.startTime = Date.now();
+      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
 
-                    // Calcular distancia taxímetro si hay viaje activo
-                    if (viajeActivo && ultimaLat !== null && ultimaLng !== null) {
-                        const dist = calcularDistanciaMetros(ultimaLat, ultimaLng, lat, lng);
-                        if (dist > 5) { // filtrar ruido de GPS
-                            metrosRecorridos += dist;
-                            actualizarTaximetro();
-                        }
-                    }
-                    ultimaLat = lat;
-                    ultimaLng = lng;
-                },
-                (err) => console.warn(err),
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-            );
+      liveKm = 0.1;
+      liveSeconds = 0;
+      clearInterval(taximeterInterval);
+      taximeterInterval = setInterval(() => {
+        liveSeconds += 2;
+        liveKm += 0.05; // Simulación de avance
+        let fare = calculateLiveFare(liveKm, activeTrip.paradas || 0, activeTrip.destName);
+        activeTrip.currentFare = fare;
+        activeTrip.distKm = Math.round(liveKm * 10) / 10;
+        localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
+        renderSheet();
+      }, 2000);
 
-            // Guardar en Supabase cada 5 segundos
-            setInterval(() => {
-                if (choferData && driverLat && driverLng) {
-                    supabaseClient.from('choferes').upsert([{
-                        patente: choferData.patente,
-                        nombre: choferData.nombre,
-                        lat: driverLat,
-                        lng: driverLng,
-                        disponible: esDisponible,
-                        actualizado_en: new Date().toISOString()
-                    }]);
-                }
-            }, 5000);
-        }
+      renderSheet();
+    }
 
-        async function toggleDisponible() {
-            esDisponible = !esDisponible;
-            const btn = document.getElementById('btn-disponible');
+    function calculateLiveFare(km, paradas, destName) {
+      if (destName.toLowerCase().includes('claromeco') || destName.toLowerCase().includes('claromecó')) return 15000;
+      if (destName.toLowerCase().includes('orense')) return 12000;
+      if (destName.toLowerCase().includes('san mayol')) return 8000;
+      if (destName.toLowerCase().includes('reta')) return 18000;
+      if (destName.toLowerCase().includes('cascallares')) return 6000;
 
-            if (esDisponible) {
-                btn.style.background = 'var(--success)';
-                btn.innerText = '🟢 ESTOY DISPONIBLE';
-            } else {
-                btn.style.background = 'var(--danger)';
-                btn.innerText = '🔴 NO DISPONIBLE';
-            }
+      let calc = BAJADA + (km * POR_KM) + (paradas * EXTRA_PARADA);
+      return Math.round(Math.max(calc, MINIMO));
+    }
 
-            if (choferData && driverLat) {
-                await supabaseClient.from('choferes').upsert([{
-                    patente: choferData.patente,
-                    nombre: choferData.nombre,
-                    lat: driverLat,
-                    lng: driverLng,
-                    disponible: esDisponible,
-                    actualizado_en: new Date().toISOString()
-                }]);
-            }
-        }
+    function renderTaximeterUI(container, order) {
+      let isLongDistance = order.destName.toLowerCase().includes('claromec') || order.destName.toLowerCase().includes('reta') || order.destName.toLowerCase().includes('orense');
 
-        function escucharViajesPendientes() {
-            supabaseClient
-                .channel('viajes-pendientes')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'viajes' }, (payload) => {
-                    const viaje = payload.new;
-                    if (viaje.estado === 'pendiente' && esDisponible && !viajeActivo) {
-                        notificarNuevoViaje(viaje);
-                    }
-                })
-                .subscribe();
-        }
+      container.innerHTML = `
+        ${isLongDistance ? `<div style="background:#f57c00; padding:6px; font-size:0.8rem; font-weight:bold; border-radius:6px; margin-bottom:8px; text-align:center;">⚠️ VIAJE LARGO: AVISAR A BASE DE REMIS</div>` : ''}
 
-        function notificarNuevoViaje(viaje) {
-            viajePendiente = viaje;
-            document.getElementById('modal-origen').innerText = viaje.origen_texto;
-            document.getElementById('modal-destino').innerText = viaje.destino_texto;
-            document.getElementById('modal-viaje').style.display = 'flex';
+        <div class="taximetro">
+          <span style="font-size:0.8rem; color:var(--subtext);">TAXÍMETRO TAXI/REMIS 3A</span>
+          <div class="price">$${order.currentFare || MINIMO}</div>
+          <div style="font-size:0.9rem;">Distancia: ${order.distKm || 0.1} KM</div>
+        </div>
 
-            // Alarma de audio sintética
-            reproducirAlarma();
+        <div class="action-grid" style="margin-bottom:8px;">
+          <button class="btn-action" onclick="driverAddParada()">🛑 Parada Extra (+$500)</button>
+          <button class="btn-action" onclick="alert('Ruta recalculada.')">📍 Cambiar Destino</button>
+        </div>
 
-            // Vibración nativa
-            if (navigator.vibrate) {
-                navigator.vibrate([500, 200, 500, 200, 800]);
-            }
-        }
+        <button class="btn-main" style="background:var(--accent-green);" onclick="finishTrip()">🏁 FINALIZAR VIAJE</button>
+        <button class="btn-danger" onclick="triggerDriverEmergency()">🚨 AUXILIO / EMERGENCIA</button>
+      `;
+    }
 
-        function reproducirAlarma() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                gain.gain.setValueAtTime(0.5, ctx.currentTime);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 1.2);
-            } catch(e) {}
-        }
+    function driverAddParada() {
+      activeTrip.paradas = (activeTrip.paradas || 0) + 1;
+      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
+      renderSheet();
+    }
 
-        function rechazarViaje() {
-            document.getElementById('modal-viaje').style.display = 'none';
-            viajePendiente = null;
-        }
+    function finishTrip() {
+      clearInterval(taximeterInterval);
+      activeTrip.status = 'FINALIZADO';
+      activeTrip.finalFare = activeTrip.currentFare || MINIMO;
+      localStorage.setItem('remis3a_active_order', JSON.stringify(activeTrip));
+      renderSheet();
+    }
 
-        async function aceptarViaje() {
-            if (!viajePendiente) return;
+    function renderFinishTripUI(container, order) {
+      let total = order.finalFare || MINIMO;
+      let appCommission = total * APP_FEE;
+      let driverEarnings = total - appCommission;
 
-            viajeActivo = viajePendiente;
-            viajePendiente = null;
-            document.getElementById('modal-viaje').style.display = 'none';
+      container.innerHTML = `
+        <div style="text-align:center;">
+          <h2 style="color:var(--accent-green); margin-bottom:8px;">💰 DESGLOSE COBRO</h2>
+          <div class="dash-box" style="text-align:left;">
+            <p><strong>Total Cobrado al Pasajero:</strong> $${total}</p>
+            <p><strong>Ganancia App (5%):</strong> -$${appCommission}</p>
+            <hr style="border-color:#333; margin:6px 0;">
+            <p style="font-size:1.2rem; color:var(--accent-green);"><strong>Ganancia Chofer (95%):</strong> $${driverEarnings}</p>
+          </div>
 
-            // Actualizar Supabase
-            await supabaseClient.from('viajes').update({
-                estado: 'aceptado',
-                chofer_patente: choferData.patente
-            }).eq('id', viajeActivo.id);
+          <div class="form-group" style="text-align:left;">
+            <label>Cobrado por:</label>
+            <div class="action-grid">
+              <button class="btn-action" onclick="confirmPayment('EFECTIVO')">💵 EFECTIVO</button>
+              <button class="btn-action" onclick="confirmPayment('TRANSFERENCIA')">📱 TRANSFERENCIA</button>
+            </div>
+          </div>
 
-            // Iniciar Taxímetro UI
-            document.getElementById('control-section').style.display = 'none';
-            document.getElementById('taximetro-section').style.display = 'flex';
+          <button class="btn-action" style="width:100%; margin-top:8px; background:#f44336;" onclick="reportNoPay()">❌ NO PAGÓ (REGISTRAR EN BASE)</button>
+        </div>
+      `;
+    }
 
-            taxAcumulado = 1800;
-            metrosRecorridos = 0;
-            actualizarTaximetro();
-        }
+    function confirmPayment(type) {
+      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":0, "total":0}');
+      stats.trips += 1;
+      stats.total += activeTrip.finalFare;
+      localStorage.setItem('remis3a_driver_stats', JSON.stringify(stats));
 
-        function actualizarTaximetro() {
-            const tramos100m = Math.floor(metrosRecorridos / 100);
-            taxAcumulado = taxBase + (tramos100m * 350);
-            document.getElementById('tax-total').innerText = '$' + taxAcumulado.toLocaleString('es-AR');
-            document.getElementById('tax-distancia').innerText = `Distancia recorrida: ${Math.round(metrosRecorridos)} m`;
-        }
+      localStorage.removeItem('remis3a_active_order');
+      activeTrip = null;
+      renderSheet();
+    }
 
-        async function finalizarViaje() {
-            if (!viajeActivo) return;
+    function reportNoPay() {
+      alert('Registrado en Base como DEUDA DE PASAJERO. La administración se encargará de cobrarlo.');
+      confirmPayment('NO_PAGO');
+    }
 
-            await supabaseClient.from('viajes').update({
-                estado: 'finalizado',
-                monto_total: taxAcumulado
-            }).eq('id', viajeActivo.id);
+    function triggerDriverEmergency() {
+      alert('🚨 ALERTA DE AUXILIO ENVIADA A BASE REMIS 3A Y OTROS CHOFERES EN TRES ARROYOS');
+    }
 
-            alert(`Viaje Finalizado. Total a cobrar: $${taxAcumulado}`);
+    function openGastosModal() {
+      let modal = document.getElementById('driver-modal');
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>⛽ Cargar Gasto Operativo</h3>
+          <div class="form-group"><label>Tipo de Gasto</label>
+            <select id="gasto-type">
+              <option value="Nafta">Nafta</option>
+              <option value="GNC">GNC</option>
+              <option value="Lavado">Lavado</option>
+              <option value="Arreglo">Arreglo Mecánico</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Monto ($)</label><input type="number" id="gasto-monto" placeholder="Ej: 5000"></div>
+          <button class="btn-main" onclick="saveGasto()">GUARDAR GASTO</button>
+          <button class="btn-danger" onclick="document.getElementById('driver-modal').style.display='none'">CANCELAR</button>
+        </div>
+      `;
+    }
 
-            viajeActivo = null;
-            document.getElementById('taximetro-section').style.display = 'none';
-            document.getElementById('control-section').style.display = 'flex';
-        }
+    function saveGasto() {
+      let monto = document.getElementById('gasto-monto').value;
+      if (monto) {
+        alert(`Gasto de $${monto} registrado exitosamente para el cálculo de ganancia neta.`);
+        document.getElementById('driver-modal').style.display = 'none';
+      }
+    }
 
-        function recentrarMapa() {
-            if (driverLat && driverLng) {
-                map.flyTo([driverLat, driverLng], 16);
-            }
-        }
+    // PANEL ADMIN / BASE (CLAVE 1234)
+    function openAdminModal() {
+      let pass = prompt('Ingrese clave de Administrador / Base:');
+      if (pass !== '1234') {
+        alert('Clave incorrecta');
+        return;
+      }
 
-        function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δφ = (lat2 - lat1) * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
+      let stats = JSON.parse(localStorage.getItem('remis3a_driver_stats') || '{"trips":8, "total":25000}');
+      let appTotalNet = stats.total * APP_FEE;
 
-            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-    </script>
+      let modal = document.getElementById('driver-modal');
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>🏢 CONTROL BASE - REMIS 3A</h2>
+          <small style="color:var(--subtext);">Tres Arroyos - Panel Central</small>
+          
+          <div class="dash-box" style="margin-top:12px;">
+            <h4>💵 Caja General del Día</h4>
+            <p><strong>Recaudación Total:</strong> $${stats.total}</p>
+            <p style="color:var(--accent-green); font-size:1.1rem;"><strong>Ganancia App (5%):</strong> $${appTotalNet}</p>
+          </div>
+
+          <h4>🚖 Choferes Conectados (Simulado)</h4>
+          <div style="background:#111; padding:8px; border-radius:6px; font-size:0.8rem; margin-bottom:12px;">
+            🟢 Juan Pérez (Cronos) - Libre<br>
+            🔴 Carlos Ruiz (Corolla) - En Viaje<br>
+            ⚪ Roberto Gómez - Desconectado
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <button class="btn-action" onclick="alert('Mensaje enviado a todos los choferes: Lluvia, todos a la base')">📢 Alerta Lluvia</button>
+            <button class="btn-action" onclick="alert('Bloqueo realizado')">🚫 Bloquear Usuario</button>
+          </div>
+
+          <button class="btn-danger" style="margin-top:12px;" onclick="document.getElementById('driver-modal').style.display='none'">CERRAR PANEL BASE</button>
+        </div>
+      `;
+    }
+  </script>
 </body>
-          </html>
+</html>
