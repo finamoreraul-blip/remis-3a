@@ -19,7 +19,7 @@
             --success: #10b981;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
         
         header {
             background: var(--card); padding: 14px 18px; border-bottom: 1px solid var(--card-border);
@@ -28,7 +28,7 @@
         .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
         .badge { background: rgba(255, 195, 0, 0.15); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
 
-        #map-container { position: relative; flex: 1; width: 100%; }
+        #map-container { position: relative; width: 100%; height: 45vh; min-height: 280px; }
         #map { width: 100%; height: 100%; }
 
         .btn-recenter {
@@ -41,17 +41,15 @@
         .panel {
             background: var(--card); border-radius: 20px 20px 0 0; padding: 20px;
             display: flex; flex-direction: column; gap: 14px; z-index: 1000;
-            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); max-height: 55vh; overflow-y: auto;
+            box-shadow: 0 -6px 20px rgba(0,0,0,0.6); flex: 1; margin-top: -15px;
         }
 
         .btn-main {
             background: var(--primary); color: #000; border: none; padding: 16px;
             border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer;
             width: 100%; text-transform: uppercase; letter-spacing: 0.5px;
-            transition: transform 0.1s;
         }
         .btn-main:disabled { background: #27272a; color: #71717a; cursor: not-allowed; }
-        .btn-main:active:not(:disabled) { transform: scale(0.98); }
 
         .gps-alert {
             background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5;
@@ -168,6 +166,7 @@
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([-38.3764, -60.2721], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            setTimeout(() => { map.invalidateSize(); }, 200);
         }
 
         function pedirUbicacionReal() {
@@ -218,6 +217,7 @@
                 userMarker.setLatLng([origenLat, origenLng]);
             }
 
+            map.invalidateSize();
             geocodificarInversa(origenLat, origenLng);
         }
 
