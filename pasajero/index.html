@@ -3,397 +3,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remis 3A - Chofer</title>
-    <!-- Leaflet CSS -->
+    <title>REMIS 3A - Pasajero</title>
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
-            --primary: #0F172A;
-            --secondary: #1E293B;
-            --accent: #D97706;
-            --accent-light: #F59E0B;
-            --bg: #F8FAFC;
+            --bg-color: #F5F7FA;
             --card-bg: #FFFFFF;
-            --text: #0F172A;
-            --text-muted: #64748B;
-            --border: #E2E8F0;
-            --success: #10B981;
+            --text-color: #0F2A3D;
+            --primary: #0F2A3D;
+            --accent: #C9A227;
+            --success: #1DB954;
+            --danger: #E63946;
+            --border-color: #E2E8F0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        [data-theme="dark"] {
+            --bg-color: #121824;
+            --card-bg: #1E293B;
+            --text-color: #F8FAFC;
+            --primary: #38BDF8;
+            --accent: #FACC15;
+            --success: #22C55E;
             --danger: #EF4444;
+            --border-color: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        html, body {
-            overflow-y: auto;
-            height: auto;
-            background-color: var(--bg);
-            color: var(--text);
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo-container h1 {
-            font-size: 20px;
-            font-weight: 800;
-            color: #FFFFFF;
-        }
-
-        .logo-container h1 span {
-            color: var(--accent-light);
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-header {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        #map-container {
-            width: 100%;
-            height: 35vh;
-            min-height: 220px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .main-content {
-            padding: 16px;
-            max-width: 600px;
-            margin: 0 auto;
-            padding-bottom: 100px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--primary);
-            color: white;
-            padding: 14px 16px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-        }
-
-        .btn-main {
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
-            text-align: center;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 15px;
-            outline: none;
-            margin-bottom: 10px;
-            background: #FFF;
-        }
-
-        .pedido-card {
-            background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-            border: 2px solid var(--accent);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            animation: pulseCard 1.5s infinite alternate;
-        }
-
-        @keyframes pulseCard {
-            from { border-color: var(--accent); }
-            to { border-color: #B45309; }
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(15, 23, 42, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: flex-end;
-            z-index: 2000;
-        }
-
-        .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 600px;
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .hidden { display: none !important; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        html, body { overflow-y: auto; height: auto; background-color: var(--bg-color); color: var(--text-color); }
+        header { background: linear-gradient(135deg, var(--primary), #1E3A8A); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 1000; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area h1 { font-size: 1.25rem; font-weight: 800; }
+        .header-actions { display: flex; gap: 8px; }
+        .btn-icon { background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
+        .btn-sos { background: var(--danger); }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-color); }
+        #map-container { width: 100%; height: 40vh; min-height: 250px; position: relative; z-index: 1; }
+        #map { width: 100%; height: 100%; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto 80px auto; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-color); }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 1rem; outline: none; }
+        .form-control:focus { border-color: var(--accent); }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: var(--primary); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border-color); color: var(--text-color); }
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 5px; }
+        .chip { padding: 10px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-size: 0.85rem; font-weight: 600; text-align: center; cursor: pointer; }
+        .chip.active { border-color: var(--accent); background: rgba(201, 162, 39, 0.1); }
+        .alert { padding: 12px 15px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; display: none; }
+        .alert-error { background: rgba(230, 57, 70, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .alert-success { background: rgba(29, 185, 84, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 12px 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 999; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--border-color); }
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .text-sm { font-size: 0.85rem; opacity: 0.8; }
+        .mt-2 { margin-top: 10px; }
+        .mb-2 { margin-bottom: 10px; }
     </style>
 </head>
 <body>
+    <div id="splash-screen">
+        <h1 style="font-size: 2.5rem; font-weight: 900; letter-spacing: 2px;">REMIS 3A</h1>
+        <p style="margin-top: 10px; font-weight: 500;">Pasajero - Tres Arroyos</p>
+    </div>
 
     <header>
-        <div class="logo-container">
-            <h1>REMIS <span>3A</span> (Chofer)</h1>
+        <div class="logo-area">
+            <span style="font-size: 1.5rem;">🚖</span>
+            <h1>REMIS 3A</h1>
         </div>
         <div class="header-actions">
-            <button class="btn-header" onclick="abrirPerfil()">⚙️ Perfil</button>
-            <button class="btn-header" style="background:var(--danger)" onclick="emergenciaChofer()">🚨 SOS</button>
+            <button class="btn-icon btn-sos" onclick="openModal('modal-sos')">🚨 SOS</button>
+            <button class="btn-icon" onclick="llamarBase()">📞 Base</button>
+            <button class="btn-icon" onclick="toggleDarkMode()">🌓</button>
+            <button class="btn-icon" onclick="openModal('modal-perfil')">👤</button>
         </div>
     </header>
 
-    <div id="map-container"></div>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
 
-    <div class="main-content">
-        <!-- ESTADO CONEXION -->
-        <div class="status-bar">
-            <div>
-                <div style="font-size: 12px; opacity: 0.8;">ESTADO ACTUAL</div>
-                <div id="lbl-estado-conexion" style="font-size: 18px; font-weight: bold;">DESCONECTADO</div>
-            </div>
-            <button id="btn-toggle-conexion" class="btn-header" style="background: var(--success); padding: 12px 18px; font-size: 15px;" onclick="toggleConexion()">CONECTARSE</button>
-        </div>
+    <div class="container" id="main-form-container">
+        <div id="alert-error" class="alert alert-error"></div>
+        <div id="alert-success" class="alert alert-success"></div>
 
-        <!-- DASHBOARD GANANCIAS HOY -->
         <div class="card">
-            <div class="section-title">Resumen de Hoy</div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; text-align: center;">
-                <div style="background: var(--bg); padding: 12px; border-radius: 12px;">
-                    <div style="font-size: 12px; color: var(--text-muted);">VIAJES HOY</div>
-                    <div id="dash-viajes" style="font-size: 22px; font-weight: bold;">0</div>
+            <div class="card-title">📍 Ruta del Viaje</div>
+            <div class="form-group">
+                <label class="form-label">Origen</label>
+                <div class="flex-row">
+                    <input type="text" id="input-origen" class="form-control" placeholder="Calle y número..." oninput="filtrarLugares('origen')">
+                    <button class="btn btn-primary" style="width: auto; padding: 12px 15px;" onclick="usarMiUbicacionGPS()">📍 GPS</button>
                 </div>
-                <div style="background: var(--bg); padding: 12px; border-radius: 12px;">
-                    <div style="font-size: 12px; color: var(--text-muted);">NETO PARA VOS</div>
-                    <div id="dash-neto" style="font-size: 22px; font-weight: bold; color: var(--success);">$0</div>
-                </div>
+                <div id="sugerencias-origen" style="max-height: 120px; overflow-y: auto; margin-top: 5px;"></div>
             </div>
-            <button class="btn-header" style="width:100%; background:var(--secondary); justify-content:center; margin-top:12px; padding:10px;" onclick="abrirGastos()">➕ Cargar Gasto (Nafta/GNC)</button>
+            
+            <div style="text-align: center; margin: -5px 0 5px 0;">
+                <button class="btn-icon" style="background: var(--primary); margin: 0 auto;" onclick="intercambiarRuta()">🔄 Intercambiar</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Destino</label>
+                <input type="text" id="input-destino" class="form-control" placeholder="¿A dónde vamos?" oninput="filtrarLugares('destino')">
+                <div id="sugerencias-destino" style="max-height: 120px; overflow-y: auto; margin-top: 5px;"></div>
+            </div>
+
+            <div class="flex-row" style="margin-top: 10px;">
+                <button class="chip" onclick="setDestinoFavorito('Hospital Pirovano')">🏥 Hospital</button>
+                <button class="chip" onclick="setDestinoFavorito('Terminal de Ómnibus')">🚌 Terminal</button>
+                <button class="chip" onclick="setDestinoFavorito('Municipalidad')">🏛️ Centro</button>
+                <button class="chip" onclick="setDestinoFavorito('Claromecó')">🏖️ Claromecó</button>
+            </div>
         </div>
 
-        <!-- AREA DE NUEVO PEDIDO / VIAJE ACTIVO -->
-        <div id="area-pedidos">
-            <div id="sin-pedidos" class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                Esperando viajes en Tres Arroyos... Conectate para recibir pedidos.
+        <div class="card">
+            <div class="card-title">⏰ Momento del Viaje</div>
+            <div class="flex-row">
+                <button id="btn-ahora" class="chip active" onclick="setMomento('ahora')">⚡ Ahora mismo</button>
+                <button id="btn-reservar" class="chip" onclick="setMomento('reservar')">📅 Programar Reserva</button>
             </div>
-
-            <div id="tarjeta-pedido-entrante" class="pedido-card hidden">
-                <h3 style="margin-bottom: 8px; color: #78350F;">🔔 ¡NUEVO VIAJE ENTRANTE!</h3>
-                <div style="font-size: 15px; margin-bottom: 6px;"><b>Origen:</b> <span id="ped-origen">Moreno 450</span></div>
-                <div style="font-size: 15px; margin-bottom: 6px;"><b>Destino:</b> <span id="ped-destino">Hospital Pirovano</span></div>
-                <div style="font-size: 15px; margin-bottom: 12px;"><b>Tarifa Est.:</b> <span id="ped-precio" style="color:var(--accent); font-weight:bold;">$2.400</span> (Efectivo)</div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-main" style="background: var(--success); font-size: 15px; padding: 12px;" onclick="aceptarViaje()">ACEPTAR VIAJE</button>
-                    <button class="btn-main" style="background: var(--danger); font-size: 15px; padding: 12px;" onclick="rechazarViaje()">RECHAZAR</button>
+            <div id="panel-reserva" style="display: none; margin-top: 15px;">
+                <div class="flex-row">
+                    <input type="date" id="input-fecha-reserva" class="form-control" min="">
+                    <select id="input-hora-reserva" class="form-control"></select>
                 </div>
             </div>
+        </div>
 
-            <div id="tarjeta-viaje-curso" class="card hidden">
-                <div class="section-title">Viaje Asignado / En Curso</div>
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;" id="curso-ruta">Moreno ➔ Hospital</div>
-                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;" id="curso-cliente">Pasajero: Juan • Tel: 2983112233</div>
-                
-                <div id="acciones-proceso">
-                    <button class="btn-main" style="background: #0284C7; margin-bottom: 10px;" onclick="navegarGoogleMaps()">🗺️ Navegar con Google Maps</button>
-                    <button class="btn-main" style="background: var(--success); margin-bottom: 10px;" onclick="marcarLlegada()">1. YA LLEGUÉ AL ORIGEN</button>
-                    <button class="btn-main" style="background: var(--accent); margin-bottom: 10px;" onclick="iniciarTaximetroChofer()">2. INICIAR VIAJE / TAXÍMETRO</button>
-                    <button class="btn-main" style="background: var(--primary);" onclick="finalizarViajeChofer()">3. FINALIZAR Y COBRAR</button>
+        <div class="card">
+            <div class="card-title">🚙 Tipo de Vehículo</div>
+            <div class="grid-options" id="grid-tipos-auto">
+                <div class="chip active" onclick="setTipoAuto('Comun', 0)">Común</div>
+                <div class="chip" onclick="setTipoAuto('Baul Grande', 500)">Baúl Grande (+$500)</div>
+                <div class="chip" onclick="setTipoAuto('5 Pasajeros', 0)">5 Pasajeros</div>
+                <div class="chip" onclick="setTipoAuto('Silla Bebe', 0)">Silla Bebé</div>
+                <div class="chip" onclick="setTipoAuto('Rampa', 0)">Rampa</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">💳 Forma de Pago</div>
+            <div class="grid-options" id="grid-pagos">
+                <div class="chip active" onclick="setPago('Efectivo')">💵 Efectivo</div>
+                <div class="chip" onclick="setPago('Transferencia')">📱 Transferencia</div>
+                <div class="chip" onclick="setPago('Cuenta Corriente')">📋 Cta Corriente</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">➕ Paradas y Observaciones</div>
+            <button class="btn btn-outline mb-2" onclick="agregarParadaExtra()">➕ Agregar Parada Extra (+$500)</button>
+            <div id="lista-paradas-extras"></div>
+            <div class="form-group mt-2">
+                <label class="form-label">Nota para el chofer</label>
+                <textarea id="input-nota" class="form-control" placeholder="Ej: Voy con valijas, mascota..." rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cupón de Descuento</label>
+                <div class="flex-row">
+                    <input type="text" id="input-cupon" class="form-control" placeholder="Ej: REMIS10">
+                    <button class="btn btn-outline" style="width: auto;" onclick="aplicarCupon()">Aplicar</button>
                 </div>
+                <div id="cupon-mensaje" class="text-sm mt-2"></div>
+            </div>
+        </div>
+
+        <div class="card" style="background: rgba(201, 162, 39, 0.05); border-color: var(--accent);">
+            <div class="card-title">💰 Cotización Estimada</div>
+            <div id="desglose-tarifa" style="font-size: 0.95rem; line-height: 1.6;">Calculando ruta...</div>
+        </div>
+    </div>
+
+    <div class="sticky-footer" id="footer-accion">
+        <div style="flex-grow: 1;">
+            <div class="text-sm">Total Estimado</div>
+            <div id="lbl-total-footer" style="font-size: 1.25rem; font-weight: 800; color: var(--accent);">$2.000</div>
+        </div>
+        <button class="btn btn-success" style="flex-grow: 2; padding: 15px;" onclick="pedirRemis()">PEDIR REMIS AHORA</button>
+    </div>
+
+    <div class="modal" id="modal-sos">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-sos')">✕</button>
+            <h3 class="card-title">🚨 Centro de Emergencias SOS</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-danger" onclick="window.location.href='tel:911'">🚨 LLAMAR AL 911</button>
+                <button class="btn btn-success" onclick="compartirUbicacionWhatsApp()">📱 Compartir Ubicación por WhatsApp</button>
+                <button class="btn btn-primary" onclick="window.location.href='tel:2983123456'">📞 Llamar a Base (2983-123456)</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL PERFIL CHOFER -->
-    <div id="modal-perfil" class="modal-overlay">
+    <div class="modal" id="modal-perfil">
         <div class="modal-content">
-            <h3>Perfil del Chofer</h3>
-            <input type="text" id="perfil-nombre" class="input-field" placeholder="Nombre y Apellido" value="Juan Pérez">
-            <input type="text" id="perfil-patente" class="input-field" placeholder="Patente (Ej: AB 123 CD)" value="AB 123 CD">
-            <input type="text" id="perfil-auto" class="input-field" placeholder="Modelo y Color" value="Fiat Cronos Blanco">
-            <input type="text" id="perfil-cel" class="input-field" placeholder="Celular" value="2983445566">
-            <button class="btn-main" onclick="guardarPerfilChofer()">GUARDAR PERFIL</button>
+            <button class="modal-close" onclick="closeModal('modal-perfil')">✕</button>
+            <h3 class="card-title">👤 Mi Perfil Pasajero</h3>
+            <div class="form-group">
+                <label class="form-label">Nombre y Apellido</label>
+                <input type="text" id="perfil-nombre" class="form-control" value="María Fernández">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Teléfono</label>
+                <input type="text" id="perfil-telefono" class="form-control" value="2983-600001">
+            </div>
+            <div class="flex-between mb-2">
+                <span class="text-sm">Viajes: <strong id="perfil-viajes">15</strong></span>
+                <span class="text-sm">Puntos: <strong id="perfil-puntos">150 pts</strong></span>
+            </div>
+            <button class="btn btn-primary" onclick="guardarPerfil()">Guardar Cambios</button>
+            <button class="btn btn-outline mt-2" onclick="verHistorialViajes()">📜 Ver Historial Completo</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-historial">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('modal-historial')">✕</button>
+            <h3 class="card-title">📜 Historial de Viajes</h3>
+            <div id="lista-historial-viajes" style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-estado-viaje">
+        <div class="modal-content" style="text-align: center;">
+            <div id="estado-viaje-icono" style="font-size: 3rem; margin-bottom: 10px;">🛰️</div>
+            <h3 id="estado-viaje-titulo" class="card-title" style="justify-content: center;">Buscando Chofer...</h3>
+            <p id="estado-viaje-sub" class="text-sm mb-2">Choferes conectados en Tres Arroyos: 5</p>
+            <div id="detalle-chofer-asignado" style="background: var(--bg-color); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: left;">
+                <div class="flex-row">
+                    <div style="font-size: 2.5rem;">👨‍✈️</div>
+                    <div>
+                        <strong id="ch-nombre" style="font-size: 1.1rem;">Juan Pérez</strong>
+                        <div class="text-sm" id="ch-auto">Fiat Cronos Blanco (AB 123 CD)</div>
+                        <div class="text-sm" style="color: var(--accent);">⭐ 4.8 (234 viajes)</div>
+                    </div>
+                </div>
+                <div class="flex-row mt-2" style="justify-content: space-around;">
+                    <button class="btn btn-primary" style="padding: 8px 15px;" onclick="llamarChofer()">📞 Llamar</button>
+                    <button class="btn btn-success" style="padding: 8px 15px;" onclick="whatsappChofer()">💬 WhatsApp</button>
+                    <button class="btn btn-outline" style="padding: 8px 15px;" onclick="compartirViaje()">🔗 Compartir</button>
+                </div>
+            </div>
+            <div id="taximetro-vivo" style="display: none; background: rgba(29, 185, 84, 0.1); border: 1px solid var(--success); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div class="text-sm">TAXÍMETRO EN VIVO</div>
+                <div id="tx-precio" style="font-size: 2rem; font-weight: 900; color: var(--success);">$2.700</div>
+                <div class="flex-between text-sm mt-2">
+                    <span id="tx-km">KM: 3.2</span>
+                    <span id="tx-tiempo">Tiempo: 8 min</span>
+                </div>
+            </div>
+            <button id="btn-cancelar-pedido" class="btn btn-danger" onclick="cancelarPedidoActual()">Cancelar Pedido</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-calificar">
+        <div class="modal-content" style="text-align: center;">
+            <h3 class="card-title" style="justify-content: center;">🏁 ¡Llegaste a destino!</h3>
+            <p class="text-sm mb-2">Desglose del viaje (Sin espera, sin recargos)</p>
+            <div id="desglose-final-viaje" style="background: var(--bg-color); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left; font-size: 0.95rem;"></div>
+            <div class="form-group">
+                <label class="form-label">Calificá a tu chofer</label>
+                <div id="estrellas-calificacion" style="font-size: 2rem; cursor: pointer; margin-bottom: 10px;">⭐ ⭐ ⭐ ⭐ ⭐</div>
+            </div>
+            <button class="btn btn-success" onclick="finalizarCalificacionYSalir()">Aceptar y Finalizar</button>
         </div>
     </div>
 
     <script>
-        let mapChofer, markerChofer;
-        let conectado = false;
-        let viajeAsignado = null;
-        let choferPerfil = { nombre: 'Juan Pérez', patente: 'AB 123 CD', auto: 'Fiat Cronos Blanco' };
+        let state = { origen: '', destino: '', momento: 'ahora', tipoAuto: 'Comun', extraAuto: 0, formaPago: 'Efectivo', paradas: [], nota: '', cupon: '', descuentoCupon: 0, kmEst: 3.5, precioEst: 2550, estadoPedido: 'INICIAL' };
+        const listadoCalles = ["Moreno", "Rivadavia", "San Martín", "Libertad", "9 de Julio", "Sarmiento", "Av. del Trabajador", "Av. Ituzaingó", "Colón", "Maipú", "Chacabuco", "Dorrego", "Pellegrini", "Hipólito Yrigoyen", "25 de Mayo", "Belgrano", "Mitre", "Alvear", "Hospital Pirovano", "Terminal de Ómnibus", "Municipalidad", "Escuela N°1", "Club Huracán", "Casino", "Banco Nación", "Plaza San Martín", "Comisaría", "Bomberos", "Anses", "Correo", "Carrefour", "La Anónima", "YPF", "Shell", "Club Quilmes", "Polideportivo", "Escuela N°2", "Jardín 901", "Catedral", "Claromecó", "Reta", "Orense"];
+        let map, markerOrigen;
 
         window.onload = function() {
-            inicializarMapaChofer();
-            verificarPerfilGuardado();
-            setInterval(simularLlegadaPedidos, 15000); // Simula llegada de pedidos cada 15s si está conectado
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 500);
+            }, 1000);
+            initMap();
+            initReservasHoras();
+            calcularTarifa();
+            if(localStorage.getItem('remis3a_perfil_pasajero')) {
+                let p = JSON.parse(localStorage.getItem('remis3a_perfil_pasajero'));
+                document.getElementById('perfil-nombre').value = p.nombre;
+                document.getElementById('perfil-telefono').value = p.telefono;
+            }
         };
 
-        function inicializarMapaChofer() {
-            mapChofer = L.map('map-container').setView([-38.375, -60.273], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapChofer);
-            markerChofer = L.marker([-38.375, -60.273]).addTo(mapChofer).bindPopup("Mi Móvil").openPopup();
-        }
-
-        function verificarPerfilGuardado() {
-            let p = localStorage.getItem('remis3a_chofer_perfil');
-            if (p) {
-                choferPerfil = JSON.parse(p);
+        function initMap() {
+            map = L.map('map').setView([-38.3750, -60.2730], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    map.setView([lat, lon], 15);
+                    markerOrigen = L.marker([lat, lon]).addTo(map).bindPopup("Tu ubicación GPS").openPopup();
+                    state.origen = "Mi ubicación GPS actual";
+                    document.getElementById('input-origen').value = state.origen;
+                    calcularTarifa();
+                });
             }
         }
 
-        function abrirPerfil() {
-            document.getElementById('modal-perfil').style.display = 'flex';
+        function usarMiUbicacionGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    map.setView([lat, lon], 16);
+                    if(markerOrigen) map.removeLayer(markerOrigen);
+                    markerOrigen = L.marker([lat, lon]).addTo(map).bindPopup("Mi ubicación").openPopup();
+                    state.origen = "Mi ubicación GPS actual";
+                    document.getElementById('input-origen').value = state.origen;
+                    mostrarExito("Ubicación GPS actualizada");
+                    calcularTarifa();
+                }, () => mostrarError("No se pudo obtener la señal GPS"));
+            }
         }
 
-        function guardarPerfilChofer() {
-            choferPerfil.nombre = document.getElementById('perfil-nombre').value;
-            choferPerfil.patente = document.getElementById('perfil-patente').value;
-            choferPerfil.auto = document.getElementById('perfil-auto').value;
-            localStorage.setItem('remis3a_chofer_perfil', JSON.stringify(choferPerfil));
-            document.getElementById('modal-perfil').style.display = 'none';
-            alert('Perfil guardado exitosamente.');
+        function filtrarLugares(tipo) {
+            const query = document.getElementById(`input-${tipo}`).value.toLowerCase();
+            const contenedor = document.getElementById(`sugerencias-${tipo}`);
+            contenedor.innerHTML = '';
+            if(query.length < 2) return;
+            listadoCalles.filter(c => c.toLowerCase().includes(query)).forEach(l => {
+                const div = document.createElement('div');
+                div.style.padding = '8px 12px';
+                div.style.background = 'var(--card-bg)';
+                div.style.borderBottom = '1px solid var(--border-color)';
+                div.style.cursor = 'pointer';
+                div.innerText = l;
+                div.onclick = () => {
+                    document.getElementById(`input-${tipo}`).value = l;
+                    state[tipo] = l;
+                    contenedor.innerHTML = '';
+                    calcularTarifa();
+                };
+                contenedor.appendChild(div);
+            });
         }
 
-        function toggleConexion() {
-            conectado = !conectado;
-            let btn = document.getElementById('btn-toggle-conexion');
-            let lbl = document.getElementById('lbl-estado-conexion');
-            if (conectado) {
-                btn.innerText = 'DESCONECTARSE';
-                btn.style.background = 'var(--danger)';
-                lbl.innerText = 'EN SERVICIO (LIBRE)';
-                alert('Estás conectado. Recibirás pedidos en Tres Arroyos.');
+        function intercambiarRuta() {
+            let temp = state.origen;
+            state.origen = state.destino;
+            state.destino = temp;
+            document.getElementById('input-origen').value = state.origen;
+            document.getElementById('input-destino').value = state.destino;
+            calcularTarifa();
+        }
+
+        function setDestinoFavorito(lugar) {
+            document.getElementById('input-destino').value = lugar;
+            state.destino = lugar;
+            calcularTarifa();
+        }
+
+        function setMomento(momento) {
+            state.momento = momento;
+            document.getElementById('btn-ahora').classList.toggle('active', momento === 'ahora');
+            document.getElementById('btn-reservar').classList.toggle('active', momento === 'reservar');
+            document.getElementById('panel-reserva').style.display = momento === 'reservar' ? 'block' : 'none';
+            document.querySelector('#footer-accion .btn-success').innerText = momento === 'reservar' ? "RESERVAR REMIS" : "PEDIR REMIS AHORA";
+        }
+
+        function initReservasHoras() {
+            const selectHora = document.getElementById('input-hora-reserva');
+            for(let h=0; h<24; h++) {
+                for(let m=0; m<60; m+=30) {
+                    let hh = h < 10 ? '0'+h : h;
+                    let mm = m === 0 ? '00' : m;
+                    let opt = document.createElement('option');
+                    opt.value = `${hh}:${mm}`;
+                    opt.innerText = `${hh}:${mm} hs`;
+                    selectHora.appendChild(opt);
+                }
+            }
+            document.getElementById('input-fecha-reserva').min = new Date().toISOString().split('T')[0];
+            document.getElementById('input-fecha-reserva').value = new Date().toISOString().split('T')[0];
+        }
+
+        function setTipoAuto(tipo, extra) {
+            state.tipoAuto = tipo;
+            state.extraAuto = extra;
+            document.querySelectorAll('#grid-tipos-auto .chip').forEach(c => {
+                c.classList.toggle('active', c.innerText.includes(tipo));
+            });
+            calcularTarifa();
+        }
+
+        function setPago(pago) {
+            state.formaPago = pago;
+            document.querySelectorAll('#grid-pagos .chip').forEach(c => {
+                c.classList.toggle('active', c.innerText.includes(pago));
+            });
+        }
+
+        function agregarParadaExtra() {
+            let parada = prompt("Ingrese dirección de la parada extra:");
+            if(parada && parada.trim() !== '') {
+                state.paradas.push(parada.trim());
+                actualizarListaParadas();
+                calcularTarifa();
+            }
+        }
+
+        function actualizarListaParadas() {
+            const cont = document.getElementById('lista-paradas-extras');
+            cont.innerHTML = '';
+            state.paradas.forEach((p, idx) => {
+                let div = document.createElement('div');
+                div.className = 'flex-between mt-2';
+                div.style.background = 'var(--bg-color)';
+                div.style.padding = '8px 12px';
+                div.style.borderRadius = '8px';
+                div.innerHTML = `<span>Parada ${idx+1}: ${p}</span> <button class="btn btn-danger" style="width: auto; padding: 4px 8px; font-size: 0.75rem;" onclick="quitarParada(${idx})">✕</button>`;
+                cont.appendChild(div);
+            });
+        }
+
+        function quitarParada(idx) {
+            state.paradas.splice(idx, 1);
+            actualizarListaParadas();
+            calcularTarifa();
+        }
+
+        function aplicarCupon() {
+            let codigo = document.getElementById('input-cupon').value.trim().toUpperCase();
+            if(codigo === 'REMIS10') {
+                state.cupon = 'REMIS10';
+                state.descuentoCupon = 500;
+                document.getElementById('cupon-mensaje').innerHTML = '<span style="color: var(--success);">¡Cupón aplicado! -$500</span>';
+                calcularTarifa();
             } else {
-                btn.innerText = 'CONECTARSE';
-                btn.style.background = 'var(--success)';
-                lbl.innerText = 'DESCONECTADO';
-                document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
+                document.getElementById('cupon-mensaje').innerHTML = '<span style="color: var(--danger);">Cupón inválido</span>';
             }
         }
 
-        function simularLlegadaPedidos() {
-            if (!conectado || viajeAsignado) return;
-            // Mostrar pedido simulado
-            document.getElementById('sin-pedidos').classList.add('hidden');
-            document.getElementById('tarjeta-pedido-entrante').classList.remove('hidden');
-        }
-
-        function aceptarViaje() {
-            viajeAsignado = {
-                origen: 'Moreno 450',
-                destino: 'Hospital Pirovano',
-                precio: 2400,
-                cliente: 'María Gomez',
-                tel: '2983112233'
-            };
-            document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
-            document.getElementById('tarjeta-viaje-curso').classList.remove('hidden');
-            document.getElementById('curso-ruta').innerText = `${viajeAsignado.origen} ➔ ${viajeAsignado.destino}`;
-            document.getElementById('curso-cliente').innerText = `Pasajero: ${viajeAsignado.cliente} • Tel: ${viajeAsignado.tel}`;
-            alert('¡Viaje aceptado! Diríjase al origen.');
-        }
-
-        function rechazarViaje() {
-            document.getElementById('tarjeta-pedido-entrante').classList.add('hidden');
-            document.getElementById('sin-pedidos').classList.remove('hidden');
-            alert('Viaje rechazado.');
-        }
-
-        function navegarGoogleMaps() {
-            window.open('https://www.google.com/maps/search/?api=1&query=Hospital+Pirovano+Tres+Arroyos', '_blank');
-        }
-
-        function marcarLlegada() {
-            alert('Aviso enviado al pasajero: "Tu remis llegó a la puerta".');
-        }
-
-        function iniciarTaximetroChofer() {
-            alert('Taxímetro iniciado. El viaje está en curso.');
-        }
-
-        function finalizarViajeChofer() {
-            let comisionApp = 2400 * 0.05;
-            let netoChofer = 2400 - comisionApp;
-            
-            // Actualizar dashboard chofer
-            let viajesHoy = parseInt(localStorage.getItem('remis3a_chofer_viajes') || '0') + 1;
-            let totalNetoHoy = parseFloat(localStorage.getItem('remis3a_chofer_neto') || '0') + netoChofer;
-            
-            localStorage.setItem('remis3a_chofer_viajes', viajesHoy);
-            localStorage.setItem('remis3a_chofer_neto', totalNetoHoy);
-
-            document.getElementById('dash-viajes').innerText = viajesHoy;
-            document.getElementById('dash-neto').innerText = `$${totalNetoHoy.toLocaleString()}`;
-
-            document.getElementById('tarjeta-viaje-curso').classList.add('hidden');
-            document.getElementById('sin-pedidos').classList.remove('hidden');
-            viajeAsignado = null;
-            alert(`¡Viaje finalizado con éxito!\nFacturado: $2400\nComisión App (5%): $${comisionApp}\nTe queda: $${netoChofer}`);
-        }
-
-        function abrirGastos() {
-            let monto = prompt("Ingrese el monto del gasto (Nafta / GNC / Lavado):");
-            if (monto) {
-                alert('Gasto de $' + monto + ' registrado y descontado de la ganancia neta.');
+        function calcularTarifa() {
+            state.origen = document.getElementById('input-origen').value;
+            state.destino = document.getElementById('input-destino').value;
+            let viajesFijos = { 'claromecó': 15000, 'orense': 12000, 'san mayol': 8000, 'reta': 18000, 'cascallares': 6000, 'copetonas': 9000, 'micaela cascallares': 6000, 'san francisco de bellocq': 10000 };
+            let destLower = state.destino.toLowerCase().trim();
+            if(viajesFijos[destLower]) {
+                state.precioEst = viajesFijos[destLower] + state.extraAuto + (state.paradas.length * 500) - state.descuentoCupon;
+                state.kmEst = 25;
+                document.getElementById('desglose-tarifa').innerHTML = `Viaje fijo a <strong>${state.destino}</strong><br>Precio Fijo: $${viajesFijos[destLower]}<br><strong>Total: $${state.precioEst}</strong>`;
+            } else {
+                let km = Math.max(1, state.destino.length % 10 + 2);
+                state.kmEst = km;
+                let subtotal = 1500 + (km * 300) + (state.paradas.length * 500) + state.extraAuto;
+                if(subtotal < 2000) subtotal = 2000;
+                state.precioEst = subtotal - state.descuentoCupon;
+                document.getElementById('desglose-tarifa').innerHTML = `📍 KM: ${km} (~${Math.round(km*2.5)} min)<br>💵 Bajada: $1500 + KM: $${km*300}<br><strong>Total: $${state.precioEst}</strong>`;
             }
+            document.getElementById('lbl-total-footer').innerText = `$${state.precioEst}`;
         }
 
-        function emergenciaChofer() {
-            alert('🚨 EMERGENCIA: Alerta enviada a la Base 3A y autoridades.');
-            window.open('https://wa.me/2983123456?text=EMERGENCIA%20CHOFER:%20Necesito%20asistencia%20urgente.', '_blank');
+        function pedirRemis() {
+            state.origen = document.getElementById('input-origen').value.trim();
+            state.destino = document.getElementById('input-destino').value.trim();
+            if(!state.origen) { mostrarError("Falta origen"); return; }
+            if(!state.destino) { mostrarError("Falta destino"); return; }
+            if(state.origen.toLowerCase() === state.destino.toLowerCase()) { mostrarError("Origen y destino iguales"); return; }
+            
+            if(state.momento === 'reservar') {
+                let reservas = JSON.parse(localStorage.getItem('remis3a_reservas') || '[]');
+                reservas.push({ fecha: document.getElementById('input-fecha-reserva').value, hora: document.getElementById('input-hora-reserva').value, origen: state.origen, destino: state.destino, pasajero: document.getElementById('perfil-nombre').value, telefono: document.getElementById('perfil-telefono').value, chofer: 'Sin asignar' });
+                localStorage.setItem('remis3a_reservas', JSON.stringify(reservas));
+                alert("Reserva guardada con éxito.");
+                return;
+            }
+
+            state.estadoPedido = 'BUSCANDO';
+            openModal('modal-estado-viaje');
+            setTimeout(() => {
+                if(state.estadoPedido !== 'BUSCANDO') return;
+                state.estadoPedido = 'ASIGNADO';
+                document.getElementById('estado-viaje-titulo').innerText = "¡Chofer Asignado!";
+                document.getElementById('detalle-chofer-asignado').style.display = 'block';
+                let viajes = JSON.parse(localStorage.getItem('remis3a_viajes') || '[]');
+                viajes.push({ id: Date.now(), fecha: new Date().toISOString(), origen: state.origen, destino: state.destino, km: state.kmEst, precio: state.precioEst, pago: state.formaPago, chofer: 'Juan Pérez (AB 123 CD)', pasajero: document.getElementById('perfil-nombre').value, estado: 'Completado' });
+                localStorage.setItem('remis3a_viajes', JSON.stringify(viajes));
+
+                setTimeout(() => {
+                    if(state.estadoPedido !== 'ASIGNADO') return;
+                    state.estadoPedido = 'EN_VIAJE';
+                    document.getElementById('estado-viaje-titulo').innerText = "Viaje en Curso...";
+                    document.getElementById('taximetro-vivo').style.display = 'block';
+                    document.getElementById('btn-cancelar-pedido').style.display = 'none';
+
+                    setTimeout(() => {
+                        state.estadoPedido = 'FINALIZADO';
+                        closeModal('modal-estado-viaje');
+                        abrirModalCalificar(state.precioEst);
+                    }, 10000);
+                }, 4000);
+            }, 3000);
         }
+
+        function cancelarPedidoActual() {
+            if(confirm("¿Cancelar pedido?")) { state.estadoPedido = 'INICIAL'; closeModal('modal-estado-viaje'); mostrarExito("Pedido cancelado."); }
+        }
+
+        function abrirModalCalificar(precio) {
+            openModal('modal-calificar');
+            let app = Math.round(precio * 0.05);
+            document.getElementById('desglose-final-viaje').innerHTML = `Origen: ${state.origen}<br>Destino: ${state.destino}<br><strong>Total: $${precio}</strong><br><span class="text-sm" style="color:var(--success);">App (5%): $${app} | Chofer: $${precio-app}</span>`;
+        }
+
+        function finalizarCalificacionYSalir() {
+            closeModal('modal-calificar');
+            mostrarExito("¡Gracias por viajar!");
+            let pts = parseInt(localStorage.getItem('remis3a_puntos') || '150') + 10;
+            localStorage.setItem('remis3a_puntos', pts);
+            document.getElementById('perfil-puntos').innerText = pts + ' pts';
+        }
+
+        function guardarPerfil() {
+            localStorage.setItem('remis3a_perfil_pasajero', JSON.stringify({ nombre: document.getElementById('perfil-nombre').value, telefono: document.getElementById('perfil-telefono').value }));
+            closeModal('modal-perfil');
+            mostrarExito("Perfil guardado");
+        }
+
+        function verHistorialViajes() {
+            closeModal('modal-perfil');
+            openModal('modal-historial');
+            let lista = JSON.parse(localStorage.getItem('remis3a_viajes') || '[]');
+            let cont = document.getElementById('lista-historial-viajes');
+            cont.innerHTML = lista.length === 0 ? '<p class="text-sm">Sin viajes.</p>' : '';
+            lista.reverse().forEach(v => {
+                let d = document.createElement('div');
+                d.style.background = 'var(--bg-color)'; d.style.padding = '12px'; d.style.borderRadius = '12px';
+                d.innerHTML = `<div class="flex-between"><strong>${v.origen} ➔ ${v.destino}</strong> <span style="color:var(--accent);">$${v.precio}</span></div><div class="text-sm mt-2">Chofer: ${v.chofer} | Pago: ${v.pago}</div>`;
+                cont.appendChild(d);
+            });
+        }
+
+        function llamarBase() { window.location.href = 'tel:2983123456'; }
+        function llamarChofer() { window.location.href = 'tel:2983111111'; }
+        function whatsappChofer() { window.open('https://wa.me/5492983111111?text=Hola%20Juan', '_blank'); }
+        function compartirViaje() { alert("Link copiado."); }
+        function compartirUbicacionWhatsApp() { window.open('https://wa.me/?text=Mi%20ubicacion%20Remis%203A', '_blank'); }
+        function toggleDarkMode() {
+            const dark = document.body.getAttribute('data-theme') === 'dark';
+            document.body.setAttribute('data-theme', dark ? '' : 'dark');
+            localStorage.setItem('remis3a_dark', !dark);
+        }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function mostrarError(msg) { const e = document.getElementById('alert-error'); e.innerText = msg; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 4000); }
+        function mostrarExito(msg) { const e = document.getElementById('alert-success'); e.innerText = msg; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 4000); }
     </script>
 </body>
 </html>
